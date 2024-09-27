@@ -30,7 +30,7 @@ function App() {
         {/* Register Page */}
         <Route path="/register" element={<RegisterPage />} />
       </Routes>
-    </Router>
+    </Router> 
 }
     </>
   );
