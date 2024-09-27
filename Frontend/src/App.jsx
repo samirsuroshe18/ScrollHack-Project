@@ -1,12 +1,24 @@
 // src/App.js
-import React from 'react';
+import React, {useState, useEffect} from 'react';
+
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import LandingPage from './components/Landingpage';
 import Login from './components/Login';  // Ensure this path is correct
-import RegisterPage from './components/RegisterAccount'; // Ensure this path is correct
+import RegisterPage from './components/RegisterAccount'; 
+import Preloader from './components/Preloader';
 
 function App() {
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setTimeout(() => setLoading(false), 3000); 
+  }, []);
+
+
   return (
+    <>
+    {loading ? <Preloader /> :
     <Router>
       <Routes>
         {/* Landing Page */}
@@ -19,6 +31,8 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
       </Routes>
     </Router>
+}
+    </>
   );
 }
 
