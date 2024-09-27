@@ -30,7 +30,7 @@ const LandingPage = () => {
           <span ref={typedRef}></span>
         </h2>
         <a
-          href="/signup"
+          href="/Login"
           className="px-6 py-3 bg-blue-600 rounded-lg text-lg hover:bg-blue-500 transition duration-300"
         >
           Connect Now
