@@ -9,7 +9,7 @@ const LandingPage = () => {
   useEffect(() => {
     const options = {
       strings: ["Connect with Alumni", "Grow Together", "Build Your Future"],
-      typeSpeed: 50,
+      typeSpeed: 90,
       backSpeed: 25,
       loop: true,
     };
