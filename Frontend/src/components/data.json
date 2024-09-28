@@ -144,12 +144,28 @@
         "state_code": 14,
         "state_name": "Maharashtra",
         "districts": [
-          "Mumbai",
-          "Pune",
-          "Nagpur",
-          "Nashik",
+          "Akola",
           "Aurangabad",
-          "Thane"
+          "Beed",
+          "Buldhana",
+          "Chandrapur",
+          "Dhule",
+          "Gadchiroli",
+          "Hingoli",
+          "Jalgaon",
+          "Latur",
+          "Mumbai",
+          "Nagpur",
+          "Nanded",
+          "Nashik",
+          "Palghar",
+          "Pune",
+          "Raigad",
+          "Ratnagiri",
+          "Satara",
+          "Solapur",
+          "Thane",
+          "Yavatmal"
         ]
       },
       {
