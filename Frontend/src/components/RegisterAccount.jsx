@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Sdata from './data.json';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -18,23 +19,29 @@ const RegisterPage = () => {
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
 
-  useEffect(() => {
-    const fetchStates = async () => {
-        try {
-            const response = await fetch('/assets/data.json'); // Correct path
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const data = await response.json();
-            setStates(data.states);
-        } catch (error) {
-            console.error('Error fetching states:', error);
-        }
-    };
+//   useEffect(() => {
+//     const fetchStates = async () => {
+//         try {
+//             const response = await fetch(Sdata); 
+            
+//             if (!response.ok) {
+//                 throw new Error('Network response was not ok');
+//             }
+//             const data = await response.json();
+//             setStates(data.states);
+//         } catch (error) {
+//             console.error('Error fetching states:', error);
+//         }
+//     };
 
-    fetchStates();
-}, []);
+//     fetchStates();
+// }, []);
 
+const statesname = Sdata.states.map((item)=>item.state_name)
+console.log(statesname);
+
+const districtname = Sdata.states.map((item)=>item.districts)
+console.log(districtname);
 
   const handleStateChange = (e) => {
     const selectedState = e.target.value;
@@ -45,7 +52,7 @@ const RegisterPage = () => {
     }));
 
     // Filter districts based on the selected state
-    const selectedDistricts = states.find(state => state.name === selectedState)?.districts || [];
+    const selectedDistricts = Sdata.states.find(states => states.state_name === selectedState)?.districts || [];
     setDistricts(selectedDistricts);
   };
 
@@ -138,9 +145,9 @@ const RegisterPage = () => {
                 required
               >
                 <option value="">Select State</option>
-                {states.map((state) => (
-                  <option key={state.id} value={state.name}>
-                    {state.name}
+                {statesname.map((state) => (
+                  <option key={state.id} value={state}>
+                    {state}
                   </option>
                 ))}
               </select>
@@ -159,8 +166,8 @@ const RegisterPage = () => {
               >
                 <option value="">Select District</option>
                 {districts.map((district) => (
-                  <option key={district.id} value={district.name}>
-                    {district.name}
+                  <option key={district.id} value={district}>
+                    {district}
                   </option>
                 ))}
               </select>
@@ -200,12 +207,13 @@ const RegisterPage = () => {
                 <div>
                   <label className="block text-gray-400 mb-2">Passing Year</label>
                   <input
-                    type="text"
+                    type="number" 
                     name="passingYear"
                     value={formData.passingYear}
                     onChange={handleChange}
                     className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter your passing year"
+                    maxlength="4"
                     required
                   />
                 </div>

@@ -1,24 +1,41 @@
 // src/App.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import LandingPage from './components/Landingpage';
-import Login from './components/Login';  // Ensure this path is correct
-import RegisterPage from './components/RegisterAccount'; // Ensure this path is correct
+import Login from './components/Login';
+import RegisterPage from './components/RegisterAccount'; 
+import Preloader from './components/Preloader';
+import StudentDashboard from './components/StudentDashboard';
+import AlumniDashboard from './components/AlumniDashboard';
+import { PostProvider } from './components/PostContext';
 
 function App() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 3000); 
+    return () => clearTimeout(timer); // Cleanup timeout on unmount
+  }, []);
+
   return (
-    <Router>
-      <Routes>
-        {/* Landing Page */}
-        <Route path="/" element={<LandingPage />} />
-
-        {/* Login Page */}
-        <Route path="/login" element={<Login />} />  {/* This path should match exactly */}
-
-        {/* Register Page */}
-        <Route path="/register" element={<RegisterPage />} />
-      </Routes>
-    </Router>
+    <>
+      {loading ? (
+        <Preloader />
+      ) : (
+        <Router>
+          <PostProvider>
+            <Routes>
+              {/* Landing Page */}
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<Login />} />  
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/student" element={<StudentDashboard />} />
+              <Route path="/alumni" element={<AlumniDashboard />} />
+            </Routes>
+          </PostProvider>
+        </Router>
+      )}
+    </>
   );
 }
 
