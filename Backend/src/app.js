@@ -23,11 +23,12 @@ app.use(express.static(staticPath));
 app.use(cookieParser());
 
 // // routes import
-// import userRouter from './routes/user.routes.js';
-
+import userRouter from './routes/user.route.js';
+import verifyRouter from './routes/verify.routes.js';
 
 // //Routes declaration
-// app.use("/api/v1/users", userRouter);
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/verify", verifyRouter);
 
 // Custom error handeling
 app.use((err, req, res, next) => {
