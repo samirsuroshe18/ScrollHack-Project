@@ -59,7 +59,7 @@ const Login = () => {
           />
 
           {/* CAPTCHA */}
-          <div className="mb-4 text-gray-400 text-center">
+          <div className="mb-4 text-gray-400 ">
             Captcha: <strong>{captchaCode}</strong>
           </div>
           <input

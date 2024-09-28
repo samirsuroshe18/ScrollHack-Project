@@ -1,22 +1,74 @@
 import React, { useState } from 'react';
 import logo from '../assets/logo.png';
-import { usePosts } from './PostContext'; 
+import { usePosts } from './PostContext';
 import axios from 'axios';
+// import { loadStripe } from '@stripe/stripe-js';
+
+// const stripePromise = loadStripe('your-stripe-publishable-key');
 
 const StudentDashboard = () => {
   const [activeSection, setActiveSection] = useState('Profile');
-  const { posts } = usePosts(); 
+  const { posts } = usePosts();
   const [mentorPrompt, setMentorPrompt] = useState('');
   const [mentorResults, setMentorResults] = useState([]);
 
   const handleFindMentor = async () => {
     try {
       const response = await axios.post('/api/findMentor', { prompt: mentorPrompt });
-      setMentorResults(response.data); // Assuming the response contains an array of mentors
+      setMentorResults(response.data); 
       console.log('Mentor search results:', response.data);
     } catch (error) {
       console.error('Error fetching mentors:', error);
     }
+  };
+
+  // Function to handle subscription (Stripe integration)
+  const handleSubscribe = async (mentor) => {
+    const stripe = await stripePromise;
+
+    try {
+      const response = await axios.post('/api/create-checkout-session', {
+        priceId: mentor.priceId, // Assuming each mentor has a priceId
+        studentId: 'student123', // Replace with the actual student ID
+        mentorId: mentor.id, // Mentor's ID
+      });
+
+      const { id } = response.data;
+      const { error } = await stripe.redirectToCheckout({ sessionId: id });
+
+      if (error) {
+        console.error('Stripe Error:', error);
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
+    }
+  };
+
+  // Alumni cards for 1:1 mentorship subscription
+  const alumniCards = () => {
+    const alumniList = [
+      // Replace with actual alumni data or fetch from API
+      { id: 'mentor1', name: 'John Doe', expertise: 'Web Development', location: 'New York', priceId: 'price_12345' },
+      { id: 'mentor2', name: 'Jane Smith', expertise: 'Data Science', location: 'San Francisco', priceId: 'price_67890' },
+    ];
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {alumniList.map((mentor, index) => (
+          <div key={index} className="bg-gray-100 p-4 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold">{mentor.name}</h3>
+            <p>{mentor.expertise}</p>
+            <p>{mentor.location}</p>
+            <button
+              className="bg-purple-600 text-white py-2 px-4 mt-4 rounded"
+              onClick={() => handleSubscribe(mentor)}
+            >
+              Subscribe
+            </button>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   const renderSectionContent = () => {
@@ -25,7 +77,6 @@ const StudentDashboard = () => {
         return (
           <div>
             <h2 className="text-lg font-semibold mb-4">Alumni Profile</h2>
-            {/* Add form fields to capture alumni data */}
             <input type="text" placeholder="Name" className="w-full p-2 mb-2 border border-gray-300 rounded" />
             <input type="text" placeholder="Field of Expertise" className="w-full p-2 mb-2 border border-gray-300 rounded" />
             <input type="text" placeholder="Location" className="w-full p-2 mb-2 border border-gray-300 rounded" />
@@ -45,7 +96,7 @@ const StudentDashboard = () => {
                 </div>
               ))
             ) : (
-              <div className='text-black'>No success stories available.</div>
+              <div>No success stories available.</div>
             )}
           </div>
         );
@@ -96,10 +147,13 @@ const StudentDashboard = () => {
             )}
           </div>
         );
-      case 'Survey':
-        return <div>Survey Content</div>;
       case '1:1 Mentorship':
-        return <div>1:1 Mentorship Content</div>;
+        return (
+          <div className='text-black'>
+            <h2 className="text-lg font-semibold mb-4">Available Mentors for 1:1 Mentorship</h2>
+            {alumniCards()}
+          </div>
+        );
       default:
         return <div>Profile Content</div>;
     }
@@ -107,16 +161,12 @@ const StudentDashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-900">
-      {/* Sidebar */}
       <aside className="w-64 bg-gray-800 text-white flex flex-col justify-between shadow-lg">
         <div>
-          {/* Logo and name */}
           <div className="flex items-center justify-center py-6">
             <img src={logo} alt="AlumniNest Logo" className="w-16 h-16 mr-2" />
             <span className="text-2xl font-bold">AlumniNest</span>
           </div>
-
-          {/* Sidebar menu */}
           <ul className="mt-4 space-y-1">
             <li
               className={`px-8 py-3 cursor-pointer hover:bg-purple-700 transition-all ${activeSection === 'Profile' ? 'bg-yellow-600 rounded-lg' : ''}`}
@@ -162,16 +212,12 @@ const StudentDashboard = () => {
             </li>
           </ul>
         </div>
-
-        {/* Footer/Logout */}
         <div className="mb-6 px-8">
           <button className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg shadow-md transition duration-200">
             Logout
           </button>
         </div>
       </aside>
-
-      {/* Main Content */}
       <main className="flex-1 bg-gray-900 p-10">
         <header className="text-3xl font-semibold text-white mb-6">{activeSection}</header>
         <div className="bg-white shadow-md rounded-lg p-8">
