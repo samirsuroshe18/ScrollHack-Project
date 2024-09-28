@@ -20,7 +20,7 @@ const Preloader = () => {
           />
           
           
-          <circle
+          {/* <circle
             cx="50"
             cy="50"
             r="38"
@@ -28,7 +28,7 @@ const Preloader = () => {
             strokeWidth="4"
             fill="none"
             className="ring"
-          />
+          /> */}
   
           
           <defs>
