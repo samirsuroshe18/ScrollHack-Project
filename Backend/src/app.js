@@ -6,14 +6,10 @@ import { dirname } from 'path';
 import path from 'path';
 
 const app = express();
-initializeFirebaseAdmin();
 
 const __filename = fileURLToPath(import.meta.url);
-const _dirname = dirname(_filename);
+const __dirname = dirname(__filename);
 const staticPath = path.join(__dirname, '../public');
-
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, './views'));
 
 // this use for cross origin sharing 
 app.use(cors({ origin: process.env.CORS_ORIGIN }));
@@ -28,21 +24,10 @@ app.use(cookieParser());
 
 // // routes import
 // import userRouter from './routes/user.routes.js';
-// import verifyRouter from './routes/verify.routes.js';
-// import initializeFirebaseAdmin from "./utils/firebaseAdminSdk.js";
-// import societyRouter from './routes/society.routes.js';
-// import profileVerificationRouter from './routes/profileVerification.routes.js';
-// import deliveryEntryRouter from './routes/deliveryEntry.routes.js';
-// import checkInRouter from './routes/checkIn.routes.js';
 
 
 // //Routes declaration
 // app.use("/api/v1/users", userRouter);
-// app.use("/api/v1/verify", verifyRouter);
-// app.use("/api/v1/society", societyRouter);
-// app.use("/api/v1/profile-verification", profileVerificationRouter);
-// app.use("/api/v1/delivery-entry", deliveryEntryRouter);
-// app.use("/api/v1/check-in", checkInRouter);
 
 // Custom error handeling
 app.use((err, req, res, next) => {
