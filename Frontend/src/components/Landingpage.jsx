@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import Typed from 'typed.js';
 import { FaFacebook, FaTwitter, FaLinkedin } from 'react-icons/fa';
+import Logo from '../assets/logo.png';
 
 const LandingPage = () => {
   const typedRef = useRef(null);
@@ -25,12 +26,13 @@ const LandingPage = () => {
     <div className="bg-gray-900 min-h-screen flex flex-col justify-between text-white">
       {/* Hero Section */}
       <section className="flex flex-col items-center justify-center h-screen">
-        <h1 className="text-5xl md:text-6xl font-bold mb-4">AlumniNest</h1>
+        <img src={Logo} alt="AlumniNest Logo" className="h-42"/>
+        <h1 className="text-5xl md:text-6xl font-bold mb-4">AlumniNest</h1><br/>
         <h2 className="text-xl md:text-2xl mb-8 text-center">
           <span ref={typedRef}></span>
         </h2>
         <a
-          href="/signup"
+          href="/Login"
           className="px-6 py-3 bg-blue-600 rounded-lg text-lg hover:bg-blue-500 transition duration-300"
         >
           Connect Now

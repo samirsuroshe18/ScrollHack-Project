@@ -1,0 +1,357 @@
+{
+    "states": [
+      {
+        "state_code": 1,
+        "state_name": "Andhra Pradesh",
+        "districts": [
+          "Anantapur",
+          "Chittoor",
+          "East Godavari",
+          "Guntur",
+          "Krishna"
+        ]
+      },
+      {
+        "state_code": 2,
+        "state_name": "Arunachal Pradesh",
+        "districts": [
+          "Papum Pare",
+          "Lower Subansiri",
+          "Upper Subansiri",
+          "West Kameng",
+          "Tawang"
+        ]
+      },
+      {
+        "state_code": 3,
+        "state_name": "Assam",
+        "districts": [
+          "Kamrup Metropolitan",
+          "Guwahati",
+          "Dibrugarh",
+          "Tinsukia",
+          "Karbi Anglong"
+        ]
+      },
+      {
+        "state_code": 4,
+        "state_name": "Bihar",
+        "districts": [
+          "Patna",
+          "Gaya",
+          "Bhagalpur",
+          "Muzaffarpur",
+          "Nalanda"
+        ]
+      },
+      {
+        "state_code": 5,
+        "state_name": "Chhattisgarh",
+        "districts": [
+          "Raipur",
+          "Bilaspur",
+          "Durg",
+          "Korba",
+          "Jagdalpur"
+        ]
+      },
+      {
+        "state_code": 6,
+        "state_name": "Goa",
+        "districts": [
+          "North Goa",
+          "South Goa"
+        ]
+      },
+      {
+        "state_code": 7,
+        "state_name": "Gujarat",
+        "districts": [
+          "Ahmedabad",
+          "Surat",
+          "Vadodara",
+          "Rajkot",
+          "Junagadh"
+        ]
+      },
+      {
+        "state_code": 8,
+        "state_name": "Haryana",
+        "districts": [
+          "Gurugram",
+          "Faridabad",
+          "Ambala",
+          "Hisar",
+          "Rohtak"
+        ]
+      },
+      {
+        "state_code": 9,
+        "state_name": "Himachal Pradesh",
+        "districts": [
+          "Shimla",
+          "Kullu",
+          "Mandi",
+          "Dharamshala",
+          "Bilaspur"
+        ]
+      },
+      {
+        "state_code": 10,
+        "state_name": "Jharkhand",
+        "districts": [
+          "Ranchi",
+          "Jamshedpur",
+          "Dhanbad",
+          "Deoghar",
+          "Dumka"
+        ]
+      },
+      {
+        "state_code": 11,
+        "state_name": "Karnataka",
+        "districts": [
+          "Bengaluru",
+          "Mysuru",
+          "Mangaluru",
+          "Hubli-Dharwad",
+          "Belagavi"
+        ]
+      },
+      {
+        "state_code": 12,
+        "state_name": "Kerala",
+        "districts": [
+          "Thiruvananthapuram",
+          "Kochi",
+          "Kozhikode",
+          "Malappuram",
+          "Thrissur"
+        ]
+      },
+      {
+        "state_code": 13,
+        "state_name": "Madhya Pradesh",
+        "districts": [
+          "Bhopal",
+          "Indore",
+          "Gwalior",
+          "Ujjain",
+          "Sagar"
+        ]
+      },
+      {
+        "state_code": 14,
+        "state_name": "Maharashtra",
+        "districts": [
+          "Mumbai",
+          "Pune",
+          "Nagpur",
+          "Nashik",
+          "Aurangabad",
+          "Thane"
+        ]
+      },
+      {
+        "state_code": 15,
+        "state_name": "Manipur",
+        "districts": [
+          "Imphal East",
+          "Imphal West",
+          "Thoubal",
+          "Bishnupur",
+          "Churachandpur"
+        ]
+      },
+      {
+        "state_code": 16,
+        "state_name": "Meghalaya",
+        "districts": [
+          "East Khasi Hills",
+          "West Khasi Hills",
+          "Jaintia Hills",
+          "Ri-Bhoi",
+          "West Garo Hills"
+        ]
+      },
+      {
+        "state_code": 17,
+        "state_name": "Mizoram",
+        "districts": [
+          "Aizawl",
+          "Champhai",
+          "Lunglei",
+          "Lawngtlai",
+          "Serchhip"
+        ]
+      },
+      {
+        "state_code": 18,
+        "state_name": "Nagaland",
+        "districts": [
+          "Dimapur",
+          "Kohima",
+          "Wokha",
+          "Tuensang",
+          "Zunheboto"
+        ]
+      },
+      {
+        "state_code": 19,
+        "state_name": "Odisha",
+        "districts": [
+          "Bhubaneswar",
+          "Cuttack",
+          "Berhampur",
+          "Rourkela",
+          "Sambalpur"
+        ]
+      },
+      {
+        "state_code": 20,
+        "state_name": "Punjab",
+        "districts": [
+          "Ludhiana",
+          "Amritsar",
+          "Jalandhar",
+          "Patiala",
+          "Mohali"
+        ]
+      },
+      {
+        "state_code": 21,
+        "state_name": "Rajasthan",
+        "districts": [
+          "Jaipur",
+          "Udaipur",
+          "Jodhpur",
+          "Ajmer",
+          "Bikaner"
+        ]
+      },
+      {
+        "state_code": 22,
+        "state_name": "Sikkim",
+        "districts": [
+          "East Sikkim",
+          "West Sikkim",
+          "South Sikkim",
+          "North Sikkim"
+        ]
+      },
+      {
+        "state_code": 23,
+        "state_name": "Tamil Nadu",
+        "districts": [
+          "Chennai",
+          "Coimbatore",
+          "Madurai",
+          "Tiruchirappalli",
+          "Salem"
+        ]
+      },
+      {
+        "state_code": 24,
+        "state_name": "Telangana",
+        "districts": [
+          "Hyderabad",
+          "Warangal",
+          "Nalgonda",
+          "Khammam",
+          "Rangareddy"
+        ]
+      },
+      {
+        "state_code": 25,
+        "state_name": "Tripura",
+        "districts": [
+          "Agartala",
+          "West Tripura",
+          "Dhalai",
+          "Gomati",
+          "Unakoti"
+        ]
+      },
+      {
+        "state_code": 26,
+        "state_name": "Uttar Pradesh",
+        "districts": [
+          "Lucknow",
+          "Kanpur",
+          "Ghaziabad",
+          "Varanasi",
+          "Agra"
+        ]
+      },
+      {
+        "state_code": 27,
+        "state_name": "Uttarakhand",
+        "districts": [
+          "Dehradun",
+          "Haridwar",
+          "Nainital",
+          "Udham Singh Nagar",
+          "Tehri Garhwal"
+        ]
+      },
+      {
+        "state_code": 28,
+        "state_name": "West Bengal",
+        "districts": [
+          "Kolkata",
+          "Howrah",
+          "Darjeeling",
+          "Murshidabad",
+          "Bardhaman"
+        ]
+      },
+      {
+        "state_code": 29,
+        "state_name": "Delhi",
+        "districts": [
+          "Central Delhi",
+          "East Delhi",
+          "West Delhi",
+          "North Delhi",
+          "South Delhi"
+        ]
+      },
+      {
+        "state_code": 30,
+        "state_name": "Puducherry",
+        "districts": [
+          "Puducherry",
+          "Karaikal",
+          "Yanam",
+          "Mahe"
+        ]
+      },
+      {
+        "state_code": 31,
+        "state_name": "Chandigarh",
+        "districts": [
+          "Chandigarh"
+        ]
+      },
+      {
+        "state_code": 32,
+        "state_name": "Ladakh",
+        "districts": [
+          "Leh",
+          "Kargil"
+        ]
+      },
+      {
+        "state_code": 33,
+        "state_name": "Jammu and Kashmir",
+        "districts": [
+          "Srinagar",
+          "Jammu",
+          "Rajouri",
+          "Poonch",
+          "Kathua"
+        ]
+      }
+    ]
+  }
+  
