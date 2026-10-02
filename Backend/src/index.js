@@ -1,6 +1,6 @@
-import dotenv from 'dotenv'
-import connectDB from './database/database.js'
-dotenv.config()
+// must stay first: ES imports are hoisted, and the modules below read process.env
+import 'dotenv/config';
+import connectDB from './database/database.js';
 import app from './app.js';
 
 
