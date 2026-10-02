@@ -1,5 +1,6 @@
 // src/LandingPage.js
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import Typed from 'typed.js';
 import { FaFacebook, FaTwitter, FaLinkedin } from 'react-icons/fa';
 import Logo from '../assets/logo.png';
@@ -31,12 +32,12 @@ const LandingPage = () => {
         <h2 className="text-xl md:text-2xl mb-8 text-center">
           <span ref={typedRef}></span>
         </h2>
-        <a
-          href="/Login"
+        <Link
+          to="/login"
           className="px-6 py-3 bg-blue-600 rounded-lg text-lg hover:bg-blue-500 transition duration-300"
         >
           Connect Now
-        </a>
+        </Link>
       </section>
 
       {/* Introduction Section */}
