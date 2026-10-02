@@ -1,12 +1,12 @@
 // utils/mailSender.js
 import { createTransport } from 'nodemailer';
-import bcryptjs from 'bcryptjs'
+import crypto from 'crypto';
 import { User } from '../models/user.model.js';
 
 async function mailSender(email, userId, emailType) {
   try {
     // Create hashed token 
-    const hashedToken = await bcryptjs.hash(userId.toString(), 10)
+    const hashedToken = crypto.randomBytes(32).toString('hex');
 
     if (emailType === "VERIFY") {
       await User.findByIdAndUpdate(userId, { verifyToken: hashedToken, verifyTokenExpiry: Date.now() + (1000 * 60 * 10) });
