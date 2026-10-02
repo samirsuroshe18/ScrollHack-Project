@@ -35,7 +35,10 @@ app.use((req, res, next) => {
 app.use((err, req, res, next) => {
     const isValidationError = err.name === 'ValidationError';
     const statusCode = err.statusCode || (isValidationError ? 400 : 500);
-    const message = err.message || "Internal server error";
+    // an unexpected failure can carry database or stack details, so only messages
+    // written for the client (ApiError) or for a 4xx are sent back
+    const isUnexpected = statusCode >= 500 && !(err instanceof ApiError);
+    const message = isUnexpected ? "Internal server error" : (err.message || "Internal server error");
 
     if (statusCode >= 500) {
         console.log(err);

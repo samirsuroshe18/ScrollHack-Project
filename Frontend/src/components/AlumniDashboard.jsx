@@ -15,19 +15,20 @@ const AlumniDashboard = () => {
 
   const reloadPosts = () => setPostsVersion((version) => version + 1);
 
+  // the keys give each section its own composer, so a draft never moves between them
   const renderSectionContent = () => {
     switch (activeSection) {
       case 'Success Story':
         return (
           <>
-            <PostComposer type="success_story" onPosted={reloadPosts} />
+            <PostComposer key="success_story" type="success_story" onPosted={reloadPosts} />
             <PostFeed type="success_story" refreshKey={postsVersion} />
           </>
         );
       case 'Job Portal':
         return (
           <>
-            <PostComposer type="job" onPosted={reloadPosts} />
+            <PostComposer key="job" type="job" onPosted={reloadPosts} />
             <PostFeed type="job" refreshKey={postsVersion} />
           </>
         );
