@@ -5,6 +5,7 @@ import ApiError from './utils/ApiError.js';
 import ApiResponse from './utils/ApiResponse.js';
 import userRouter from './routes/user.route.js';
 import verifyRouter from './routes/verify.routes.js';
+import postRouter from './routes/post.routes.js';
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.get("/api/v1/health", (req, res) => {
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/verify", verifyRouter);
+app.use("/api/v1/posts", postRouter);
 
 app.use((req, res, next) => {
     next(new ApiError(404, "Route not found"));
