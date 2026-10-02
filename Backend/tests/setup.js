@@ -5,7 +5,7 @@ process.env.ACCESS_TOKEN_SECRET = 'test-access';
 process.env.ACCESS_TOKEN_EXPIRY = '1d';
 process.env.REFRESH_TOKEN_SECRET = 'test-refresh';
 process.env.REFRESH_TOKEN_EXPIRY = '10d';
-process.env.FRONTEND_URL = 'http://localhost:5173';
+process.env.FRONTEND_URL = 'http://localhost:5174';
 
 let mongoServer;
 
