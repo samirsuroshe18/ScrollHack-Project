@@ -9,10 +9,13 @@ process.env.FRONTEND_URL = 'http://localhost:5173';
 
 let mongoServer;
 
+// the database process can take a while to start on a busy machine
+const STARTUP_TIMEOUT_MS = 120000;
+
 beforeAll(async () => {
-    mongoServer = await MongoMemoryServer.create();
+    mongoServer = await MongoMemoryServer.create({ instance: { launchTimeout: STARTUP_TIMEOUT_MS } });
     await mongoose.connect(mongoServer.getUri());
-});
+}, STARTUP_TIMEOUT_MS);
 
 afterEach(async () => {
     const collections = Object.values(mongoose.connection.collections);
