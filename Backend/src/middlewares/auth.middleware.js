@@ -5,7 +5,7 @@ import { User } from "../models/user.model.js";
 
 const verifyJwt = asyncHandler(async (req, _, next) => {
     try {
-        const token = req.cookie?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
 
         if (!token) {
             throw new ApiError(401, "Unauthorised request");
@@ -25,4 +25,8 @@ const verifyJwt = asyncHandler(async (req, _, next) => {
     }
 })
 
-export { verifyJwt };
+// use after verifyJwt
+const requireRole = (...roles) => (req, _, next) =>
+    roles.includes(req.user?.role) ? next() : next(new ApiError(403, "You are not allowed to do this"));
+
+export { verifyJwt, requireRole };
