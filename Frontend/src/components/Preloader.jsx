@@ -1,4 +1,4 @@
-import React from 'react';
+
 import '../assets/Preloader.css'
 
 const Preloader = () => {
