@@ -2,6 +2,7 @@ import { useState } from 'react';
 import DashboardLayout from './DashboardLayout';
 import ProfileForm from './ProfileForm';
 import PostFeed from './PostFeed';
+import MentorSearch from './MentorSearch';
 
 const SECTIONS = ['Profile', 'Success Story', 'Job Portal', 'Find Mentor', '1:1 Mentorship'];
 
@@ -15,7 +16,7 @@ const StudentDashboard = () => {
       case 'Job Portal':
         return <PostFeed type="job" />;
       case 'Find Mentor':
-        return <p className="text-gray-400">Mentor search will appear here.</p>;
+        return <MentorSearch />;
       case '1:1 Mentorship':
         return <p className="text-gray-400">Conversations with your mentors will appear here.</p>;
       default:

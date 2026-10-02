@@ -3,6 +3,7 @@ import DashboardLayout from './DashboardLayout';
 import ProfileForm from './ProfileForm';
 import PostComposer from './PostComposer';
 import PostFeed from './PostFeed';
+import MentorshipRequests from './MentorshipRequests';
 
 const SECTIONS = ['Profile', 'Success Story', 'Job Portal', 'Requests', '1:1 Mentorship'];
 
@@ -30,7 +31,7 @@ const AlumniDashboard = () => {
           </>
         );
       case 'Requests':
-        return <p className="text-gray-400">Mentorship requests will appear here.</p>;
+        return <MentorshipRequests />;
       case '1:1 Mentorship':
         return <p className="text-gray-400">Conversations with your students will appear here.</p>;
       default:
