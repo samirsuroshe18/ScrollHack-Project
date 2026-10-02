@@ -1,60 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import Sdata from './data.json';
+import api, { errorMessage } from '../api/client';
+import { STATES } from '../data/states';
+import { errorTextClass, inputClass, labelClass, primaryButtonClass } from './formStyles';
+
+const MIN_PASSWORD_LENGTH = 6;
+
+const emptyForm = {
+  name: '',
+  email: '',
+  password: '',
+  confirmPassword: '',
+  mobileNo: '',
+  studentAlumni: '',
+  state: '',
+  district: '',
+  profession: '',
+  field: '',
+  passingYear: '',
+  workplace: '',
+};
 
 const RegisterPage = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    mobileNo: '',
-    studentAlumni: '',
-    state: '',
-    district: '',
-    profession: '',
-    field: '',
-    passingYear: '',
-    workplace: '',
-  });
-
-  const [states, setStates] = useState([]);
-  const [districts, setDistricts] = useState([]);
-
-//   useEffect(() => {
-//     const fetchStates = async () => {
-//         try {
-//             const response = await fetch(Sdata); 
-            
-//             if (!response.ok) {
-//                 throw new Error('Network response was not ok');
-//             }
-//             const data = await response.json();
-//             setStates(data.states);
-//         } catch (error) {
-//             console.error('Error fetching states:', error);
-//         }
-//     };
-
-//     fetchStates();
-// }, []);
-
-const statesname = Sdata.states.map((item)=>item.state_name)
-console.log(statesname);
-
-const districtname = Sdata.states.map((item)=>item.districts)
-console.log(districtname);
-
-  const handleStateChange = (e) => {
-    const selectedState = e.target.value;
-    setFormData((prev) => ({
-      ...prev,
-      state: selectedState,
-      district: '', // Reset district when state changes
-    }));
-
-    // Filter districts based on the selected state
-    const selectedDistricts = Sdata.states.find(states => states.state_name === selectedState)?.districts || [];
-    setDistricts(selectedDistricts);
-  };
+  const [formData, setFormData] = useState(emptyForm);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  // set once the account exists, to show the "check your email" message
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -64,13 +36,67 @@ console.log(districtname);
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
+    setError('');
+
+    if (formData.password.length < MIN_PASSWORD_LENGTH) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    const isAlumni = formData.studentAlumni === 'alumni';
+
+    setSubmitting(true);
+    try {
+      await api.post('/users/register', {
+        userName: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phoneNo: formData.mobileNo,
+        role: formData.studentAlumni,
+        state: formData.state,
+        district: formData.district,
+        profile: isAlumni
+          ? {
+              profession: formData.profession,
+              field: formData.field,
+              passingYear: formData.passingYear,
+              workplace: formData.workplace,
+            }
+          : {},
+      });
+      setRegisteredEmail(formData.email);
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
+  if (registeredEmail) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md text-center">
+          <h1 className="text-3xl font-bold text-white mb-6">Check your email</h1>
+          <p className="text-gray-300 mb-6">
+            We sent a verification link to <strong>{registeredEmail}</strong>; it is valid for 10 minutes.
+          </p>
+          <Link to="/login" className="text-blue-500 hover:underline">
+            Go to login
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center py-8">
       <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-4xl">
         <h1 className="text-3xl font-bold text-white text-center mb-6">Register</h1>
 
@@ -78,13 +104,14 @@ console.log(districtname);
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {/* Name */}
             <div>
-              <label className="block text-gray-400 mb-2">Name</label>
+              <label className={labelClass} htmlFor="name">Name</label>
               <input
+                id="name"
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
                 placeholder="Enter your name"
                 required
               />
@@ -92,40 +119,72 @@ console.log(districtname);
 
             {/* Email */}
             <div>
-              <label className="block text-gray-400 mb-2">Email</label>
+              <label className={labelClass} htmlFor="email">Email</label>
               <input
+                id="email"
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
                 placeholder="Enter your email"
+                required
+              />
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className={labelClass} htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={inputClass}
+                placeholder="At least 6 characters"
+                required
+              />
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className={labelClass} htmlFor="confirmPassword">Confirm Password</label>
+              <input
+                id="confirmPassword"
+                type="password"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className={inputClass}
+                placeholder="Enter your password again"
                 required
               />
             </div>
 
             {/* Mobile No */}
             <div>
-              <label className="block text-gray-400 mb-2">Mobile No</label>
+              <label className={labelClass} htmlFor="mobileNo">Mobile No</label>
               <input
-                type="text"
+                id="mobileNo"
+                type="tel"
                 name="mobileNo"
                 value={formData.mobileNo}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
                 placeholder="Enter your mobile number"
-                required
               />
             </div>
 
-            {/* Student/Alumni Selection */}
+            {/* Student/Alumni */}
             <div>
-              <label className="block text-gray-400 mb-2">Student/Alumni</label>
+              <label className={labelClass} htmlFor="studentAlumni">Student/Alumni</label>
               <select
+                id="studentAlumni"
                 name="studentAlumni"
                 value={formData.studentAlumni}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={inputClass}
                 required
               >
                 <option value="">Select</option>
@@ -136,17 +195,17 @@ console.log(districtname);
 
             {/* State */}
             <div>
-              <label className="block text-gray-400 mb-2">State</label>
+              <label className={labelClass} htmlFor="state">State</label>
               <select
+                id="state"
                 name="state"
                 value={formData.state}
-                onChange={handleStateChange}
-                className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
+                onChange={handleChange}
+                className={inputClass}
               >
                 <option value="">Select State</option>
-                {statesname.map((state) => (
-                  <option key={state.id} value={state}>
+                {STATES.map((state) => (
+                  <option key={state} value={state}>
                     {state}
                   </option>
                 ))}
@@ -155,89 +214,86 @@ console.log(districtname);
 
             {/* District */}
             <div>
-              <label className="block text-gray-400 mb-2">District</label>
-              <select
+              <label className={labelClass} htmlFor="district">District</label>
+              <input
+                id="district"
+                type="text"
                 name="district"
                 value={formData.district}
                 onChange={handleChange}
-                className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-                disabled={!formData.state} // Disable if no state is selected
-              >
-                <option value="">Select District</option>
-                {districts.map((district) => (
-                  <option key={district.id} value={district}>
-                    {district}
-                  </option>
-                ))}
-              </select>
+                className={inputClass}
+                placeholder="Enter your district"
+              />
             </div>
 
-            {/* Profession (conditionally rendered) */}
             {formData.studentAlumni === 'alumni' && (
               <>
+                {/* Profession */}
                 <div>
-                  <label className="block text-gray-400 mb-2">Profession</label>
+                  <label className={labelClass} htmlFor="profession">Profession</label>
                   <input
+                    id="profession"
                     type="text"
                     name="profession"
                     value={formData.profession}
                     onChange={handleChange}
-                    className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClass}
                     placeholder="Enter your profession"
-                    required
                   />
                 </div>
 
                 {/* Field */}
                 <div>
-                  <label className="block text-gray-400 mb-2">Field</label>
+                  <label className={labelClass} htmlFor="field">Field</label>
                   <input
+                    id="field"
                     type="text"
                     name="field"
                     value={formData.field}
                     onChange={handleChange}
-                    className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClass}
                     placeholder="Enter your field of study"
-                    required
                   />
                 </div>
 
                 {/* Passing Year */}
                 <div>
-                  <label className="block text-gray-400 mb-2">Passing Year</label>
+                  <label className={labelClass} htmlFor="passingYear">Passing Year</label>
                   <input
-                    type="number" 
+                    id="passingYear"
+                    type="number"
                     name="passingYear"
+                    min="1950"
+                    max="2100"
                     value={formData.passingYear}
                     onChange={handleChange}
-                    className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClass}
                     placeholder="Enter your passing year"
-                    maxlength="4"
-                    required
                   />
                 </div>
 
                 {/* Workplace */}
                 <div>
-                  <label className="block text-gray-400 mb-2">Workplace</label>
+                  <label className={labelClass} htmlFor="workplace">Workplace</label>
                   <input
+                    id="workplace"
                     type="text"
                     name="workplace"
                     value={formData.workplace}
                     onChange={handleChange}
-                    className="w-full p-3 rounded-lg bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={inputClass}
                     placeholder="Enter your workplace"
-                    required
                   />
                 </div>
               </>
             )}
           </div>
 
+          {error && <p className={errorTextClass} role="alert">{error}</p>}
+
           {/* Submit Button */}
-          <button className="w-full bg-blue-600 p-3 rounded-lg text-white hover:bg-blue-500">
-            Register
+          <button className={primaryButtonClass} disabled={submitting}>
+            {submitting ? 'Creating account…' : 'Register'}
           </button>
 
           {/* Login Option */}
