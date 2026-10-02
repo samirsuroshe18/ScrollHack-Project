@@ -1,3 +1,4 @@
+import { jest } from '@jest/globals';
 import request from 'supertest';
 import app from '../src/app.js';
 import { User } from '../src/models/user.model.js';
@@ -292,5 +293,43 @@ describe('password reset', () => {
         const res = await request(app).get(`${api}/verify/reset-password`).query({ token: 'nope' });
         expect(res.status).toBe(400);
         expect(res.body.message).toBe('Invalid or expired link');
+    });
+});
+
+describe('review fixes', () => {
+    test('two simultaneous sign-ups with one email give one account and a 409, not a 500', async () => {
+        const [first, second] = await Promise.all([register(validSignup), register(validSignup)]);
+
+        expect([first.status, second.status].sort()).toEqual([201, 409]);
+        const loser = first.status === 409 ? first : second;
+        expect(loser.body.message).toBe('An account with this email already exists');
+        expect(await User.countDocuments()).toBe(1);
+    });
+
+    test('an unexpected server error does not reveal internal details', async () => {
+        const spy = jest.spyOn(User, 'findOne').mockImplementation(() => {
+            throw new Error('E11000 internal detail users.email_1');
+        });
+        const silenced = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+        const res = await login({ email: 'asha@example.com', password: 'secret12' });
+
+        spy.mockRestore();
+        silenced.mockRestore();
+        expect(res.status).toBe(500);
+        expect(res.body.message).toBe('Internal server error');
+    });
+
+    test('PATCH me clears the passing year when it is sent empty', async () => {
+        const user = await createVerifiedUser({ role: 'alumni', profile: { passingYear: 2019, workplace: 'Acme' } });
+        const agent = await loginAgent(user);
+
+        const res = await agent.patch(`${api}/users/me`).send({ profile: { passingYear: '' } });
+
+        expect(res.status).toBe(200);
+        expect(res.body.data.user.profile).not.toHaveProperty('passingYear');
+        const fresh = await User.findById(user._id);
+        expect(fresh.profile.passingYear).toBeUndefined();
+        expect(fresh.profile.workplace).toBe('Acme');
     });
 });

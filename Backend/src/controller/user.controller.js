@@ -6,6 +6,7 @@ import mailSender from '../utils/mailSender.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 6;
+const DUPLICATE_KEY = 11000;
 const PROFILE_TEXT_FIELDS = ['profession', 'field', 'workplace', 'location', 'availability', 'bio'];
 
 // the cookie must only require https in production, otherwise it is dropped on http://localhost
@@ -38,7 +39,10 @@ const readProfile = (profile) => {
         changes.skills = parseSkills(profile.skills);
     }
 
-    if (profile.passingYear !== undefined && profile.passingYear !== '' && profile.passingYear !== null) {
+    if (profile.passingYear === '' || profile.passingYear === null) {
+        // sent empty: the user cleared the field
+        changes.passingYear = undefined;
+    } else if (profile.passingYear !== undefined) {
         const year = Number(profile.passingYear);
         if (!Number.isInteger(year) || year < 1950 || year > 2100) {
             throw new ApiError(400, "Passing year must be a year between 1950 and 2100");
@@ -93,16 +97,25 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, 'An account with this email already exists');
     }
 
-    const user = await User.create({
-        userName,
-        email,
-        password,
-        role,
-        phoneNo: text(phoneNo),
-        state: text(state),
-        district: text(district),
-        profile: readProfile(profile),
-    });
+    let user;
+    try {
+        user = await User.create({
+            userName,
+            email,
+            password,
+            role,
+            phoneNo: text(phoneNo),
+            state: text(state),
+            district: text(district),
+            profile: readProfile(profile),
+        });
+    } catch (error) {
+        // two sign-ups can pass the check above at the same moment; the unique index decides
+        if (error.code === DUPLICATE_KEY) {
+            throw new ApiError(409, 'An account with this email already exists');
+        }
+        throw error;
+    }
 
     const mailResponse = await mailSender(email, user._id, "VERIFY");
 

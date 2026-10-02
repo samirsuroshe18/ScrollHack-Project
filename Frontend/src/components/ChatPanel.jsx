@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
 import api, { errorMessage } from '../api/client';
 import { useAuth } from '../context/auth';
@@ -8,6 +8,13 @@ const MAX_LENGTH = 1000;
 
 const formatTime = (iso) =>
   new Date(iso).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+// history and live messages can arrive in either order, so they are always merged by id
+const mergeMessages = (current, incoming) => {
+  const byId = new Map(current.map((message) => [message._id, message]));
+  for (const message of incoming) byId.set(message._id, message);
+  return [...byId.values()].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+};
 
 // One-to-one chat for accepted mentorships, used by both dashboards
 const ChatPanel = () => {
@@ -28,6 +35,18 @@ const ChatPanel = () => {
   const partnerOf = (mentorship) =>
     mentorship.student._id === user._id ? mentorship.mentor : mentorship.student;
 
+  // loads the saved messages of a conversation, unless the user has moved on by the time they arrive
+  const loadHistory = useCallback((mentorshipId) => {
+    api.get(`/mentorships/${mentorshipId}/messages`)
+      .then(({ data }) => {
+        if (activeIdRef.current !== mentorshipId) return;
+        setMessages((prev) => mergeMessages(prev, data.data.messages));
+      })
+      .catch((err) => {
+        if (activeIdRef.current === mentorshipId) setError(errorMessage(err));
+      });
+  }, []);
+
   // one socket for the life of the panel
   useEffect(() => {
     const socket = io({ withCredentials: true });
@@ -35,9 +54,10 @@ const ChatPanel = () => {
 
     const rejoin = () => {
       setConnected(true);
-      // rooms are lost on reconnect
+      // rooms are lost on reconnect, and messages sent meanwhile were missed
       if (activeIdRef.current) {
         socket.emit('chat:join', { mentorshipId: activeIdRef.current });
+        loadHistory(activeIdRef.current);
       }
     };
 
@@ -45,13 +65,13 @@ const ChatPanel = () => {
     socket.on('disconnect', () => setConnected(false));
     socket.on('chat:message', (message) => {
       if (message.mentorship !== activeIdRef.current) return;
-      setMessages((prev) => (prev.some((known) => known._id === message._id) ? prev : [...prev, message]));
+      setMessages((prev) => mergeMessages(prev, [message]));
     });
 
     return () => {
       socket.close();
     };
-  }, []);
+  }, [loadHistory]);
 
   // conversations
   useEffect(() => {
@@ -74,16 +94,14 @@ const ChatPanel = () => {
     let cancelled = false;
     setError('');
 
-    api.get(`/mentorships/${activeId}/messages`)
-      .then(({ data }) => { if (!cancelled) setMessages(data.data.messages); })
-      .catch((err) => { if (!cancelled) setError(errorMessage(err)); });
+    loadHistory(activeId);
 
     socketRef.current?.emit('chat:join', { mentorshipId: activeId }, (reply) => {
       if (!cancelled && reply && !reply.ok) setError(reply.error);
     });
 
     return () => { cancelled = true; };
-  }, [activeId]);
+  }, [activeId, loadHistory]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: 'nearest' });
