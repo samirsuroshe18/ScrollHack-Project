@@ -64,6 +64,7 @@ npm install
 | `CORS_ORIGIN` | Frontend origin (`http://localhost:5174`) |
 | `FRONTEND_URL` | Base URL used in email links (`http://localhost:5174`) |
 | `MAIL_HOST`, `EMAIL_PORT`, `MAIL_USER`, `MAIL_PASS` | SMTP settings |
+| `BREVO_API_KEY`, `MAIL_FROM` | Optional. Send email through the Brevo HTTPS API instead of SMTP, from this verified sender |
 | `ACCESS_TOKEN_SECRET`, `ACCESS_TOKEN_EXPIRY` | Access token signing, for example a long random string and `1d` |
 | `REFRESH_TOKEN_SECRET`, `REFRESH_TOKEN_EXPIRY` | Refresh token signing, for example a long random string and `10d` |
 
@@ -95,6 +96,8 @@ web app on Vercel.
 - Set the variables from `Backend/.env.example`, with `NODE_ENV=production` and
   `SERVER_HOST=0.0.0.0`. Leave `PORT` to the host if it provides one.
 - `CORS_ORIGIN` and `FRONTEND_URL` are the public address of the web app.
+- If the host blocks outgoing mail ports, set `BREVO_API_KEY` and `MAIL_FROM` so email is
+  sent over HTTPS.
 
 **Web app**
 
