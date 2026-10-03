@@ -84,6 +84,26 @@ npm run dev
 Open <http://localhost:5174>. The web app proxies `/api` and `/socket.io` to
 the API on port 3000.
 
+### Deployment
+
+The API and the web app can be hosted separately, for example the API on Render and the
+web app on Vercel.
+
+**API**
+
+- Root directory `Backend`, build command `npm install`, start command `npm start`.
+- Set the variables from `Backend/.env.example`, with `NODE_ENV=production` and
+  `SERVER_HOST=0.0.0.0`. Leave `PORT` to the host if it provides one.
+- `CORS_ORIGIN` and `FRONTEND_URL` are the public address of the web app.
+
+**Web app**
+
+- Root directory `Frontend`, build command `npm run build`, output directory `dist`.
+- `Frontend/vercel.json` forwards `/api` to the API, so the login cookie stays on the web
+  app's own address. Change the destination there if the API lives elsewhere.
+- Set `VITE_SOCKET_URL` to the API's address. Chat connects to it directly, using a
+  short-lived token from `GET /api/v1/users/chat-token`.
+
 ### Demo data
 
 ```bash
@@ -143,7 +163,7 @@ All routes are under `/api/v1`.
 
 | Area | Routes |
 |---|---|
-| Accounts | `POST /users/register`, `POST /users/login`, `GET /users/logout`, `GET /users/me`, `PATCH /users/me`, `POST /users/forgot-password` |
+| Accounts | `POST /users/register`, `POST /users/login`, `GET /users/logout`, `GET /users/me`, `PATCH /users/me`, `GET /users/chat-token`, `POST /users/forgot-password` |
 | Email links | `GET /verify/verify-email`, `GET /verify/reset-password`, `POST /verify/verify-password` |
 | Posts | `GET /posts`, `POST /posts` |
 | Mentors | `GET /mentors`, `GET /mentors/search?q=` |

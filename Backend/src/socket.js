@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 import jwt from 'jsonwebtoken';
-import { User } from './models/user.model.js';
+import { User, CHAT_TOKEN_PURPOSE } from './models/user.model.js';
 import { Message, MESSAGE_MAX_LENGTH } from './models/message.model.js';
 import { getAcceptedMentorshipFor } from './utils/chatAccess.js';
 
@@ -16,11 +16,18 @@ const readCookie = (header, name) => {
     return pair ? decodeURIComponent(pair.slice(name.length + 1)) : null;
 };
 
-// the same access token cookie the REST API uses
+// A socket proves who it is with a chat token (the web app on another host) or, when it
+// shares the API's address, with the same access token cookie the REST API uses.
 const authenticate = async (socket, next) => {
     try {
-        const token = readCookie(socket.handshake.headers.cookie, 'accessToken');
+        const chatToken = socket.handshake.auth?.token;
+        const token = chatToken ?? readCookie(socket.handshake.headers.cookie, 'accessToken');
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+        // a token passed explicitly must be a chat token; the cookie must be a login token
+        const expectedPurpose = chatToken === undefined ? undefined : CHAT_TOKEN_PURPOSE;
+        if (decoded.purpose !== expectedPurpose) throw new Error('Wrong kind of token');
+
         const user = await User.findById(decoded?._id).select('_id tokenVersion');
 
         if (!user) throw new Error('Unknown user');
