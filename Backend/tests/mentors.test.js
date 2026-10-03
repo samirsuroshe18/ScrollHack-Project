@@ -106,7 +106,10 @@ describe('mentor endpoints', () => {
             expect(res.status).toBe(200);
             expect(res.body.data.mentors).toEqual([]);
         }
+        // ?q=react&q=node is read as one description
         expect(repeated.status).toBe(200);
+        expect(repeated.body.data.mentors.map((mentor) => [mentor.userName, mentor.score]))
+            .toEqual([['Asha', 6], ['Bala', 2]]);
     });
 
     test('both endpoints require login', async () => {

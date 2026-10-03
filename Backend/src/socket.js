@@ -4,7 +4,12 @@ import { User } from './models/user.model.js';
 import { Message, MESSAGE_MAX_LENGTH } from './models/message.model.js';
 import { getAcceptedMentorshipFor } from './utils/chatAccess.js';
 
+// set by initSocket; stays undefined when the app runs without chat, for example in API tests
+let io;
+
 const roomFor = (mentorshipId) => `mentorship:${mentorshipId}`;
+// every socket of a user joins this room, so all of them can be closed at once
+const userRoom = (userId) => `user:${userId}`;
 
 const readCookie = (header, name) => {
     const pair = (header || '').split(';').map((part) => part.trim()).find((part) => part.startsWith(`${name}=`));
@@ -16,9 +21,10 @@ const authenticate = async (socket, next) => {
     try {
         const token = readCookie(socket.handshake.headers.cookie, 'accessToken');
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-        const user = await User.findById(decoded?._id).select('_id');
+        const user = await User.findById(decoded?._id).select('_id tokenVersion');
 
         if (!user) throw new Error('Unknown user');
+        if (decoded.tokenVersion !== user.tokenVersion) throw new Error('Session ended');
 
         socket.data.userId = user._id;
         next();
@@ -29,10 +35,14 @@ const authenticate = async (socket, next) => {
 
 // runs a handler and reports the outcome through the client's acknowledgement callback,
 // so a bad payload or a refused action never crashes the server
-const withAck = (handler) => async (payload, ack) => {
-    const reply = typeof ack === 'function' ? ack : () => {};
+const withAck = (handler) => async (...args) => {
+    // the acknowledgement is always the last argument; the payload may be missing
+    const ack = args.findLast((arg) => typeof arg === 'function');
+    const reply = ack || (() => {});
+    const payload = args[0] && typeof args[0] === 'object' ? args[0] : {};
+
     try {
-        reply({ ok: true, ...(await handler(payload && typeof payload === 'object' ? payload : {})) });
+        reply({ ok: true, ...(await handler(payload)) });
     } catch (error) {
         if (!error.statusCode) console.log(error);
         reply({ ok: false, error: error.statusCode ? error.message : 'Something went wrong' });
@@ -42,7 +52,7 @@ const withAck = (handler) => async (payload, ack) => {
 const chatError = (message) => Object.assign(new Error(message), { statusCode: 400 });
 
 const initSocket = (httpServer) => {
-    const io = new Server(httpServer, {
+    io = new Server(httpServer, {
         cors: { origin: process.env.CORS_ORIGIN, credentials: true },
     });
 
@@ -50,6 +60,8 @@ const initSocket = (httpServer) => {
 
     io.on('connection', (socket) => {
         const userId = socket.data.userId;
+
+        socket.join(userRoom(userId));
 
         socket.on('chat:join', withAck(async ({ mentorshipId }) => {
             const mentorship = await getAcceptedMentorshipFor(mentorshipId, userId);
@@ -86,4 +98,9 @@ const initSocket = (httpServer) => {
     return io;
 };
 
-export { initSocket }
+// closes every chat connection of a user, for example when they log out
+const disconnectUser = (userId) => {
+    io?.in(userRoom(userId)).disconnectSockets(true);
+};
+
+export { initSocket, disconnectUser }

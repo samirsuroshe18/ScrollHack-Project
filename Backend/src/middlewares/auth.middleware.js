@@ -18,6 +18,11 @@ const verifyJwt = asyncHandler(async (req, _, next) => {
             throw new ApiError(401, "Invalid access token");
         }
 
+        // logout and password reset raise the version, which ends every older session
+        if (decodedToken.tokenVersion !== user.tokenVersion) {
+            throw new ApiError(401, "Session expired");
+        }
+
         req.user = user;
         next();
     } catch (error) {
