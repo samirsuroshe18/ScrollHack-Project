@@ -24,11 +24,11 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="bg-gray-900 min-h-screen flex flex-col justify-between text-white">
+    <div className="bg-gray-900 min-h-dvh flex flex-col justify-between text-white">
       {/* Hero Section */}
-      <section className="flex flex-col items-center justify-center h-screen">
-        <img src={Logo} alt="AlumniNest Logo" className="h-42"/>
-        <h1 className="text-5xl md:text-6xl font-bold mb-4">AlumniNest</h1><br/>
+      <section className="flex flex-col items-center justify-center min-h-dvh px-4 text-center">
+        <img src={Logo} alt="AlumniNest Logo" className="h-32 sm:h-40 w-auto max-w-full"/>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4">AlumniNest</h1><br/>
         <h2 className="text-xl md:text-2xl mb-8 text-center">
           <span ref={typedRef}></span>
         </h2>
@@ -41,7 +41,7 @@ const LandingPage = () => {
       </section>
 
       {/* Introduction Section */}
-      <section className="py-12 bg-gray-800 text-center">
+      <section className="py-12 px-4 bg-gray-800 text-center">
         <div className="max-w-4xl mx-auto">
           <h3 className="text-3xl font-bold mb-4">Why Choose AlumniNest?</h3>
           <p className="text-lg mb-6">
