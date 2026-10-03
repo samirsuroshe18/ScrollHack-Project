@@ -220,7 +220,6 @@ See [docs/design.md](docs/design.md) for details.
 
 ## Team
 
-Built by Tanishq ([@TanishqMSD](https://github.com/TanishqMSD)),
-Mohit ([@Mohitd45](https://github.com/Mohitd45)),
-Samir Suroshe ([@samirsuroshe18](https://github.com/samirsuroshe18)) and
-Vaibhav ([@V8ibhav](https://github.com/V8ibhav)).
+Built by Samir Suroshe ([@samirsuroshe18](https://github.com/samirsuroshe18)),
+Mohit ([@Mohitd45](https://github.com/Mohitd45)) and 
+Tanishq ([@TanishqMSD](https://github.com/TanishqMSD)).
