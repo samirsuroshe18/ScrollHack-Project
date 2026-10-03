@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken";
 import bcrypt from 'bcrypt';
 
 export const ROLES = ['student', 'alumni'];
+export const CHAT_TOKEN_PURPOSE = 'chat';
+const CHAT_TOKEN_EXPIRY = '60s';
 
 const profileSchema = new Schema({
     profession: { type: String, trim: true },
@@ -111,6 +113,22 @@ userSchema.methods.generateAccessToken = function () {
         }, process.env.ACCESS_TOKEN_SECRET,
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
+        }
+    );
+}
+
+// A short-lived token that only opens a chat connection. The web app asks for one when
+// it is hosted on a different address than the API, where the login cookie is not sent.
+userSchema.methods.generateChatToken = function () {
+    return jwt.sign(
+        {
+            _id: this._id,
+            tokenVersion: this.tokenVersion,
+            purpose: CHAT_TOKEN_PURPOSE,
+        },
+        process.env.ACCESS_TOKEN_SECRET,
+        {
+            expiresIn: CHAT_TOKEN_EXPIRY
         }
     );
 }

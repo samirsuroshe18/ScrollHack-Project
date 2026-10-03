@@ -6,6 +6,18 @@ import { actionButtonClass, inputClass } from './formStyles';
 
 const MAX_LENGTH = 1000;
 
+// Empty in development, where the dev server forwards the chat connection to the API.
+// In production it is the API's own address, because the web host cannot forward WebSockets.
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || undefined;
+
+// The login cookie is not sent to another address, so every connection attempt, including
+// reconnects, first asks the API for a short-lived chat token.
+const chatAuth = (callback) => {
+  api.get('/users/chat-token')
+    .then(({ data }) => callback({ token: data.data.token }))
+    .catch(() => callback({}));
+};
+
 const formatTime = (iso) =>
   new Date(iso).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -52,7 +64,7 @@ const ChatPanel = () => {
 
   // one socket for the life of the panel
   useEffect(() => {
-    const socket = io({ withCredentials: true });
+    const socket = io(SOCKET_URL, { auth: chatAuth });
     socketRef.current = socket;
 
     const rejoin = () => {

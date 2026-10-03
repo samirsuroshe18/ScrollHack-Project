@@ -225,6 +225,14 @@ const getMe = asyncHandler(async (req, res) => {
     );
 });
 
+const getChatToken = asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user._id);
+
+    return res.status(200).json(
+        new ApiResponse(200, { token: user.generateChatToken() }, "Chat token")
+    );
+});
+
 // role, email, password and verification state are deliberately not editable here
 const updateMe = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id);
@@ -279,6 +287,7 @@ export {
     loginUser,
     logoutUser,
     getMe,
+    getChatToken,
     updateMe,
     forgotPassword
 }
