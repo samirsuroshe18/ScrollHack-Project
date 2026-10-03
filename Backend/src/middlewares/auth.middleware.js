@@ -12,6 +12,11 @@ const verifyJwt = asyncHandler(async (req, _, next) => {
         }
 
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+
+        // tokens issued for one purpose, such as opening a chat connection, are not logins
+        if (decodedToken.purpose) {
+            throw new ApiError(401, "Invalid access token");
+        }
         const user = await User.findById(decodedToken?._id).select("-password -refreshToken");
 
         if (!user) {

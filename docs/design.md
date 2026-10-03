@@ -18,7 +18,6 @@ working application.
 ## Out of scope
 
 - Payments. Mentorship is free; a request replaces the paid subscription.
-- Hosting and production deployment.
 - The "Institute" and "Survey" sections. They are removed from the sidebars.
 - Admin roles and Google account linking.
 
@@ -106,6 +105,7 @@ access token cookie.
 | `GET /users/logout` | auth | Clear the cookies and the stored refresh token, and end every session and chat connection of the user |
 | `GET /users/me` | auth | Return the current user |
 | `PATCH /users/me` | auth | Update name, phone and profile fields |
+| `GET /users/chat-token` | auth | Issue a 60-second token that opens a chat connection |
 | `POST /users/forgot-password` | public | Send the password reset email |
 | `GET /verify/verify-email?token=` | public | Mark the account verified |
 | `GET /verify/reset-password?token=` | public | Check that a reset token is valid |
@@ -148,8 +148,9 @@ returned, highest first, limited to ten.
 
 Chat runs over Socket.io on the same HTTP server as the REST API.
 
-- The handshake reads the access token cookie; unauthenticated sockets are
-  rejected.
+- The handshake accepts a chat token from `GET /users/chat-token`, or the access token
+  cookie when the web app shares the API's address; unauthenticated sockets are rejected.
+  A chat token is not accepted as a login by the REST API.
 - `chat:join { mentorshipId }` adds the socket to that mentorship's room. It
   is refused unless the user is a participant and the status is `accepted`.
 - `chat:send { mentorshipId, text }` saves a `Message` and emits `chat:message`
@@ -199,6 +200,13 @@ user with the wrong role to their own dashboard.
 
 The in-memory `PostContext` is removed; posts come from the API. The existing
 visual design, the preloader and the login captcha are kept.
+
+## Deployment
+
+The API and the web app can run on different hosts. The web host forwards `/api` to the
+API (see `Frontend/vercel.json`), so the browser keeps talking to one address and the
+auth cookies stay first-party. Chat cannot be forwarded that way, so the web app connects
+to the API directly, at `VITE_SOCKET_URL`, and authenticates with a chat token.
 
 ## Error handling
 
