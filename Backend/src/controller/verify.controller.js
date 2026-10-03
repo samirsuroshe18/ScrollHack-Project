@@ -2,6 +2,7 @@ import { User } from '../models/user.model.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asynchandler.js';
+import { endSessions } from '../utils/sessions.js';
 
 const MIN_PASSWORD_LENGTH = 6;
 
@@ -61,6 +62,9 @@ const setNewPassword = asyncHandler(async (req, res) => {
   user.forgotPasswordTokenExpiry = undefined;
   user.password = password;
   await user.save();
+
+  // anyone still logged in with the old password is signed out
+  await endSessions(user._id);
 
   return res.status(200).json(
     new ApiResponse(200, {}, "Password updated")

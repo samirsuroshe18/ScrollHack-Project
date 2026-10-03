@@ -168,3 +168,38 @@ test('sending after the mentorship stops being accepted is refused', async () =>
     expect(ack).toEqual({ ok: false, error: 'This mentorship is not active' });
     expect(await Message.countDocuments()).toBe(0);
 });
+
+test('a non-participant cannot send to an accepted mentorship', async () => {
+    const { mentorshipId } = await setup();
+    const stranger = await createVerifiedUser();
+    const client = await connect(await cookieFor(stranger));
+
+    const ack = await emit(client, 'chat:send', { mentorshipId, text: 'let me in' });
+
+    expect(ack).toEqual({ ok: false, error: 'You are not part of this mentorship' });
+    expect(await Message.countDocuments()).toBe(0);
+});
+
+test('an event with an acknowledgement but no payload is still answered', async () => {
+    const { student, mentorshipId } = await setup();
+    const client = await connect(await cookieFor(student));
+
+    const noPayload = await new Promise((resolve) => client.emit('chat:send', resolve));
+    const extraArgument = await new Promise((resolve) =>
+        client.emit('chat:send', { mentorshipId, text: 'hello' }, 'extra', resolve));
+
+    expect(noPayload).toEqual({ ok: false, error: 'Invalid id' });
+    expect(extraArgument.ok).toBe(true);
+});
+
+test('logging out closes the open chat connection and the old cookie cannot reconnect', async () => {
+    const { student } = await setup();
+    const cookie = await cookieFor(student);
+    const client = await connect(cookie);
+    const disconnected = new Promise((resolve) => client.once('disconnect', resolve));
+
+    await request(app).get('/api/v1/users/logout').set('Cookie', cookie);
+
+    expect(await disconnected).toBe('io server disconnect');
+    await expect(connect(cookie)).rejects.toThrow('Unauthorized');
+});

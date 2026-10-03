@@ -109,6 +109,7 @@ const RegisterPage = () => {
                 id="name"
                 type="text"
                 name="name"
+                maxLength={80}
                 value={formData.name}
                 onChange={handleChange}
                 className={inputClass}
@@ -169,6 +170,7 @@ const RegisterPage = () => {
                 id="mobileNo"
                 type="tel"
                 name="mobileNo"
+                maxLength={20}
                 value={formData.mobileNo}
                 onChange={handleChange}
                 className={inputClass}
@@ -219,6 +221,7 @@ const RegisterPage = () => {
                 id="district"
                 type="text"
                 name="district"
+                maxLength={80}
                 value={formData.district}
                 onChange={handleChange}
                 className={inputClass}
@@ -235,6 +238,7 @@ const RegisterPage = () => {
                     id="profession"
                     type="text"
                     name="profession"
+                    maxLength={120}
                     value={formData.profession}
                     onChange={handleChange}
                     className={inputClass}
@@ -249,6 +253,7 @@ const RegisterPage = () => {
                     id="field"
                     type="text"
                     name="field"
+                    maxLength={120}
                     value={formData.field}
                     onChange={handleChange}
                     className={inputClass}
@@ -279,6 +284,7 @@ const RegisterPage = () => {
                     id="workplace"
                     type="text"
                     name="workplace"
+                    maxLength={120}
                     value={formData.workplace}
                     onChange={handleChange}
                     className={inputClass}

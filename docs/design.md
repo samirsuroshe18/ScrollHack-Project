@@ -42,22 +42,23 @@ cross-site configuration.
 
 | Field | Type | Notes |
 |---|---|---|
-| `userName` | String | required |
+| `userName` | String | required, at most 80 characters |
 | `email` | String | required, unique, lowercase |
 | `password` | String | bcrypt hash, set in a pre-save hook |
-| `phoneNo` | String | |
+| `phoneNo` | String | at most 20 characters |
 | `role` | String | `student` or `alumni`, required |
-| `state`, `district` | String | chosen at registration |
+| `state`, `district` | String | chosen at registration, at most 80 characters each |
 | `isVerified` | Boolean | false until the email link is opened |
 | `profile.profession` | String | alumni |
 | `profile.field` | String | field of study or expertise |
 | `profile.passingYear` | Number | alumni |
 | `profile.workplace` | String | alumni |
-| `profile.skills` | [String] | alumni: skills; students: interests |
+| `profile.skills` | [String] | alumni: skills; students: interests; at most 20, each at most 40 characters |
 | `profile.location` | String | |
 | `profile.availability` | String | alumni: when they can mentor |
-| `profile.bio` | String | |
+| `profile.bio` | String | at most 1000 characters; the other profile text fields at most 120 |
 | `refreshToken` | String | |
+| `tokenVersion` | Number | raised on logout and password reset; a token carrying an older value is refused |
 | `verifyToken`, `verifyTokenExpiry` | String, Date | email verification |
 | `forgotPasswordToken`, `forgotPasswordTokenExpiry` | String, Date | password reset |
 
@@ -102,13 +103,13 @@ access token cookie.
 |---|---|---|
 | `POST /users/register` | public | Create an account and send the verification email |
 | `POST /users/login` | public | Verify credentials, set access and refresh cookies |
-| `GET /users/logout` | auth | Clear the cookies and the stored refresh token |
+| `GET /users/logout` | auth | Clear the cookies and the stored refresh token, and end every session and chat connection of the user |
 | `GET /users/me` | auth | Return the current user |
 | `PATCH /users/me` | auth | Update name, phone and profile fields |
 | `POST /users/forgot-password` | public | Send the password reset email |
 | `GET /verify/verify-email?token=` | public | Mark the account verified |
 | `GET /verify/reset-password?token=` | public | Check that a reset token is valid |
-| `POST /verify/verify-password?token=` | public | Set a new password |
+| `POST /verify/verify-password?token=` | public | Set a new password and end every open session of the user |
 
 Login is refused for unverified accounts, and a fresh verification email is
 sent instead. Email links point at frontend routes, which call the `verify`

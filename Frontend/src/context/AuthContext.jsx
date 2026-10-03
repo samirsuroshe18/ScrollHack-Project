@@ -12,8 +12,9 @@ export const AuthProvider = ({ children }) => {
       const { data } = await api.get('/users/me');
       setUser(data.data.user);
       return data.data.user;
-    } catch {
-      setUser(null);
+    } catch (error) {
+      // only a 401 means "not logged in"; a network blip must not end the session in the UI
+      if (error.response?.status === 401) setUser(null);
       return null;
     }
   }, []);
@@ -39,7 +40,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, logout, refreshUser }),
+    () => ({ user, loading, login, logout, refreshUser, updateUser: setUser }),
     [user, loading, login, logout, refreshUser]
   );
 

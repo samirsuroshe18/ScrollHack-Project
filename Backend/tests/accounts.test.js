@@ -333,3 +333,144 @@ describe('review fixes', () => {
         expect(fresh.profile.workplace).toBe('Acme');
     });
 });
+
+describe('sessions', () => {
+    const cookieOf = (res) => res.headers['set-cookie'].map((cookie) => cookie.split(';')[0]).join('; ');
+    const me = (cookie) => request(app).get(`${api}/users/me`).set('Cookie', cookie);
+
+    test('logout unsets the stored refresh token and ends a copied session', async () => {
+        const user = await createVerifiedUser();
+        const cookie = cookieOf(await login({ email: user.email, password: 'secret12' }));
+        expect((await me(cookie)).status).toBe(200);
+        expect((await User.findById(user._id)).refreshToken).toBeTruthy();
+
+        const out = await request(app).get(`${api}/users/logout`).set('Cookie', cookie);
+
+        expect(out.status).toBe(200);
+        expect((await me(cookie)).status).toBe(401);
+        expect((await User.findById(user._id)).refreshToken).toBeUndefined();
+    });
+
+    test('a new login works after logout', async () => {
+        const user = await createVerifiedUser();
+        const first = cookieOf(await login({ email: user.email, password: 'secret12' }));
+        await request(app).get(`${api}/users/logout`).set('Cookie', first);
+
+        const second = cookieOf(await login({ email: user.email, password: 'secret12' }));
+
+        expect((await me(second)).status).toBe(200);
+        expect((await me(first)).status).toBe(401);
+    });
+
+    test('a password reset ends sessions that were already open', async () => {
+        const user = await createVerifiedUser();
+        const cookie = cookieOf(await login({ email: user.email, password: 'secret12' }));
+        await request(app).post(`${api}/users/forgot-password`).send({ email: user.email });
+        const token = (await User.findById(user._id)).forgotPasswordToken;
+
+        await request(app).post(`${api}/verify/verify-password`).query({ token })
+            .send({ password: 'newsecret1', confirmPassword: 'newsecret1' });
+
+        expect((await me(cookie)).status).toBe(401);
+        expect((await User.findById(user._id)).refreshToken).toBeUndefined();
+    });
+
+    test('an expired reset token is rejected for both the check and the new password', async () => {
+        const user = await createVerifiedUser();
+        await request(app).post(`${api}/users/forgot-password`).send({ email: user.email });
+        const fresh = await User.findById(user._id);
+        fresh.forgotPasswordTokenExpiry = Date.now() - 1000;
+        await fresh.save();
+        const token = fresh.forgotPasswordToken;
+
+        const check = await request(app).get(`${api}/verify/reset-password`).query({ token });
+        const set = await request(app).post(`${api}/verify/verify-password`).query({ token })
+            .send({ password: 'newsecret1', confirmPassword: 'newsecret1' });
+
+        expect(check.status).toBe(400);
+        expect(set.status).toBe(400);
+        expect(set.body.message).toBe('Invalid or expired link');
+        expect((await login({ email: user.email, password: 'secret12' })).status).toBe(200);
+    });
+
+    test('the session version never reaches the client', async () => {
+        const user = await createVerifiedUser();
+        const res = await login({ email: user.email, password: 'secret12' });
+        expect(res.body.data.user).not.toHaveProperty('tokenVersion');
+    });
+});
+
+describe('profile input', () => {
+    const patchAs = async (body, overrides = {}) => {
+        const user = await createVerifiedUser(overrides);
+        const agent = await loginAgent(user);
+        return { user, res: await agent.patch(`${api}/users/me`).send(body) };
+    };
+
+    test('skills ignore values that are not text', async () => {
+        const mixed = await patchAs({ profile: { skills: [{ a: 1 }, ' React ', 5, '', null] } });
+        const asNull = await patchAs({ profile: { skills: null } }, { profile: { skills: ['Old'] } });
+        const asObject = await patchAs({ profile: { skills: { a: 1 } } });
+
+        expect(mixed.res.body.data.user.profile.skills).toEqual(['React']);
+        expect(asNull.res.body.data.user.profile.skills).toEqual([]);
+        expect(asObject.res.body.data.user.profile.skills).toEqual([]);
+    });
+
+    test('skills are limited in number and length', async () => {
+        const tooMany = await patchAs({ profile: { skills: Array.from({ length: 21 }, (_, i) => `skill${i}`) } });
+        const tooLong = await patchAs({ profile: { skills: ['a'.repeat(41)] } });
+        const atLimit = await patchAs({ profile: { skills: Array.from({ length: 20 }, (_, i) => `skill${i}`) } });
+
+        expect(tooMany.res.status).toBe(400);
+        expect(tooMany.res.body.message).toBe('You can list at most 20 skills');
+        expect(tooLong.res.status).toBe(400);
+        expect(tooLong.res.body.message).toBe('Each skill must be at most 40 characters');
+        expect(atLimit.res.status).toBe(200);
+    });
+
+    test('a phone number sent as a number is kept, not erased', async () => {
+        const { res } = await patchAs({ phoneNo: 9876543210 }, { phoneNo: '111' });
+        expect(res.status).toBe(200);
+        expect(res.body.data.user.phoneNo).toBe('9876543210');
+    });
+
+    test('objects and lists are refused for text fields instead of erasing them', async () => {
+        const phone = await patchAs({ phoneNo: { a: 1 } }, { phoneNo: '111' });
+        const state = await patchAs({ state: ['Goa'] }, { state: 'Kerala' });
+        const profession = await patchAs({ profile: { profession: { a: 1 } } });
+
+        expect(phone.res.status).toBe(400);
+        expect(phone.res.body.message).toBe('Mobile number must be text');
+        expect((await User.findById(phone.user._id)).phoneNo).toBe('111');
+        expect(state.res.status).toBe(400);
+        expect(state.res.body.message).toBe('State must be text');
+        expect(profession.res.status).toBe(400);
+        expect(profession.res.body.message).toBe('Profession must be text');
+    });
+
+    test('text fields have length limits with a short message', async () => {
+        const name = await patchAs({ userName: 'a'.repeat(81) });
+        const profession = await patchAs({ profile: { profession: 'a'.repeat(121) } });
+        const bio = await patchAs({ profile: { bio: 'b'.repeat(1001) } });
+        const bioAtLimit = await patchAs({ profile: { bio: 'b'.repeat(1000) } });
+
+        expect(name.res.status).toBe(400);
+        expect(name.res.body.message).toBe('Name must be at most 80 characters');
+        expect(profession.res.body.message).toBe('Profession must be at most 120 characters');
+        expect(bio.res.status).toBe(400);
+        expect(bio.res.body.message).toBe('About you must be at most 1000 characters');
+        expect(bioAtLimit.res.status).toBe(200);
+    });
+
+    test('sign-up applies the same limits', async () => {
+        const longName = await register({ ...validSignup, userName: 'a'.repeat(81) });
+        const badPhone = await register({ ...validSignup, phoneNo: ['1'] });
+
+        expect(longName.status).toBe(400);
+        expect(longName.body.message).toBe('Name must be at most 80 characters');
+        expect(badPhone.status).toBe(400);
+        expect(badPhone.body.message).toBe('Mobile number must be text');
+        expect(await User.countDocuments()).toBe(0);
+    });
+});

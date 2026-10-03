@@ -26,6 +26,9 @@ const ChatPanel = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [connected, setConnected] = useState(false);
+  // true from pressing Send until the server answers, so one message is never sent twice
+  const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false);
   const socketRef = useRef(null);
   // the socket handler outlives renders, so it reads the open conversation from a ref
   const activeIdRef = useRef(null);
@@ -110,10 +113,15 @@ const ChatPanel = () => {
   const handleSend = (e) => {
     e.preventDefault();
     const trimmed = text.trim();
-    if (!trimmed || !activeId) return;
+    // the ref blocks a second submit that arrives before the next render
+    if (!trimmed || !activeId || sendingRef.current) return;
 
     setError('');
+    sendingRef.current = true;
+    setSending(true);
     socketRef.current.emit('chat:send', { mentorshipId: activeId, text: trimmed }, (reply) => {
+      sendingRef.current = false;
+      setSending(false);
       if (reply?.ok) {
         setText('');
       } else {
@@ -189,8 +197,9 @@ const ChatPanel = () => {
             maxLength={MAX_LENGTH}
             placeholder="Type your message here..."
             aria-label="Message"
+            readOnly={sending}
           />
-          <button type="submit" className={actionButtonClass} disabled={!connected || !text.trim()}>
+          <button type="submit" className={actionButtonClass} disabled={!connected || sending || !text.trim()}>
             Send
           </button>
         </form>

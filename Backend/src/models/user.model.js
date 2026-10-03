@@ -72,6 +72,12 @@ const userSchema = new Schema({
         type: String
     },
 
+    // raised on logout and password reset; a token carrying an older value is refused
+    tokenVersion: {
+        type: Number,
+        default: 0,
+    },
+
     verifyToken: String,
     verifyTokenExpiry: Date,
     forgotPasswordToken: String,
@@ -101,6 +107,7 @@ userSchema.methods.generateAccessToken = function () {
             email: this.email,
             userName: this.userName,
             role: this.role,
+            tokenVersion: this.tokenVersion,
         }, process.env.ACCESS_TOKEN_SECRET,
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
@@ -125,6 +132,7 @@ userSchema.set('toJSON', {
     transform: (_, ret) => {
         delete ret.password;
         delete ret.refreshToken;
+        delete ret.tokenVersion;
         delete ret.verifyToken;
         delete ret.verifyTokenExpiry;
         delete ret.forgotPasswordToken;
