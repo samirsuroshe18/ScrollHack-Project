@@ -1,103 +1,78 @@
-// controllers/otpController.js
 import { User } from '../models/user.model.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asynchandler.js';
+import { endSessions } from '../utils/sessions.js';
 
+const MIN_PASSWORD_LENGTH = 6;
+
+// a token only matches when it is a non-empty string that has not expired
+const findByToken = async (tokenField, expiryField, token) => {
+  if (typeof token !== 'string' || !token) return null;
+  return User.findOne({ [tokenField]: token, [expiryField]: { $gt: Date.now() } });
+};
 
 const verifyEmail = asyncHandler(async (req, res) => {
-  try {
-    const token = req.query.token;
-    const user = await User.findOne({ verifyToken: token, verifyTokenExpiry: { $gt: Date.now() } });
+  const user = await findByToken('verifyToken', 'verifyTokenExpiry', req.query.token);
 
-    if (!user) {
-      return res.render("invalid")
-    }
-
-    user.isVerfied = true;
-    user.verifyToken = undefined;
-    user.verifyTokenExpiry = undefined;
-    await user.save()
-
-    return res.render("success");
-
-  } catch (error) {
-    console.log(error.message);
-    return res.status(500).json({ success: false, error: error.message });
+  if (!user) {
+    throw new ApiError(400, "Invalid or expired link");
   }
+
+  user.isVerified = true;
+  user.verifyToken = undefined;
+  user.verifyTokenExpiry = undefined;
+  await user.save();
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Email verified")
+  );
 });
 
-const resetPassword = asyncHandler(async (req, res) => {
-  try {
-    const token = req.query.token;
+const checkResetToken = asyncHandler(async (req, res) => {
+  const user = await findByToken('forgotPasswordToken', 'forgotPasswordTokenExpiry', req.query.token);
 
-    const user = await User.findOne({ forgotPasswordToken: token, forgotPasswordTokenExpiry: { $gt: Date.now() } });
-
-    if (!user) {
-      return res.render("invalidForgotLink")
-    }
-
-    return res.render("forgotPasswordSuccess")
-
-  } catch (error) {
-    console.log(error.message);
-    return res.status(500).json({ success: false, error: error.message });
+  if (!user) {
+    throw new ApiError(400, "Invalid or expired link");
   }
-})
 
-const verifyPassword = asyncHandler(async (req, res) => {
-  try {
-    const token = req.query.token;
-    const { password, confirmPassword } = req.body;
-
-    if (password !== confirmPassword) {
-      throw new ApiError(400, "Password do not match");
-    }
-
-    const user = await User.findOne({ forgotPasswordToken: token, forgotPasswordTokenExpiry: { $gt: Date.now() } });
-
-    if (!user) {
-      throw new ApiError(500, "Invalid or expired token");
-    }
-
-    user.forgotPasswordToken = undefined;
-    user.forgotPasswordTokenExpiry = undefined;
-    user.password = password
-    await user.save()
-
-    return res.status(200).json(
-      new ApiResponse(200, {}, "Password reset successful")
-    )
-
-  } catch (error) {
-    console.log(error.message);
-    return res.status(500).json({ success: false, error: error.message });
-  }
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Link is valid")
+  );
 });
 
-const verifyGoogle = asyncHandler(async (req, res) => {
-  try {
-    const token = req.query.token;
-    const user = await User.findOne({ googleVerifyToken: token, googleVerifyTokenExpiry: { $gt: Date.now() } });
+const setNewPassword = asyncHandler(async (req, res) => {
+  const { password, confirmPassword } = req.body;
 
-    if (!user) {
-      return res.render("googleLinkInvalid")
-    }
-
-    user.isVerfied = true;
-    user.isGoogleVerfied = true;
-    user.googleVerifyToken = undefined;
-    user.googleVerifyTokenExpiry = undefined;
-    user.verifyToken = undefined;
-    user.verifyTokenExpiry = undefined;
-    await user.save({ validateBeforeSave: false })
-
-    return res.render("googleLinkSuccess");
-
-  } catch (error) {
-    console.log(error.message);
-    return res.status(500).json({ success: false, error: error.message });
+  if (password !== confirmPassword) {
+    throw new ApiError(400, "Passwords do not match");
   }
+
+  if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
+    throw new ApiError(400, "Password must be at least 6 characters");
+  }
+
+  const user = await findByToken('forgotPasswordToken', 'forgotPasswordTokenExpiry', req.query.token);
+
+  if (!user) {
+    throw new ApiError(400, "Invalid or expired link");
+  }
+
+  user.forgotPasswordToken = undefined;
+  user.forgotPasswordTokenExpiry = undefined;
+  user.password = password;
+  await user.save();
+
+  // anyone still logged in with the old password is signed out
+  await endSessions(user._id);
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Password updated")
+  );
 });
 
-export { verifyEmail, resetPassword, verifyPassword, verifyGoogle }
+export {
+  verifyEmail,
+  checkResetToken,
+  setNewPassword
+}
