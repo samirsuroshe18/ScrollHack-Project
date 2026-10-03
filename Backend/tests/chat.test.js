@@ -37,9 +37,10 @@ const cookieFor = async (user) => {
 };
 
 // resolves with the connected socket, or rejects with the connection error
-const connect = (cookie) => new Promise((resolve, reject) => {
+const connect = (cookie, auth) => new Promise((resolve, reject) => {
     const client = connectClient(baseUrl, {
         extraHeaders: cookie ? { cookie } : {},
+        auth,
         transports: ['websocket'],
         reconnection: false,
     });
@@ -202,4 +203,60 @@ test('logging out closes the open chat connection and the old cookie cannot reco
 
     expect(await disconnected).toBe('io server disconnect');
     await expect(connect(cookie)).rejects.toThrow('Unauthorized');
+});
+
+describe('chat token', () => {
+    const chatTokenFor = async (cookie) => {
+        const res = await request(app).get('/api/v1/users/chat-token').set('Cookie', cookie);
+        return res.body.data.token;
+    };
+
+    test('requires login', async () => {
+        const res = await request(app).get('/api/v1/users/chat-token');
+        expect(res.status).toBe(401);
+    });
+
+    test('connects a socket that has no cookie, as when the web app is on another host', async () => {
+        const { student, mentorshipId } = await setup();
+        const token = await chatTokenFor(await cookieFor(student));
+
+        const client = await connect(null, { token });
+        const join = await emit(client, 'chat:join', { mentorshipId });
+        const sent = await emit(client, 'chat:send', { mentorshipId, text: 'hello from another host' });
+
+        expect(join).toEqual({ ok: true });
+        expect(sent.ok).toBe(true);
+        expect(sent.message.sender).toBe(String(student._id));
+    });
+
+    test('cannot be used as a login token for the API', async () => {
+        const { student } = await setup();
+        const token = await chatTokenFor(await cookieFor(student));
+
+        const asBearer = await request(app).get('/api/v1/users/me').set('Authorization', `Bearer ${token}`);
+        const asCookie = await request(app).get('/api/v1/users/me').set('Cookie', `accessToken=${token}`);
+
+        expect(asBearer.status).toBe(401);
+        expect(asCookie.status).toBe(401);
+    });
+
+    test('a login token is not accepted in place of a chat token', async () => {
+        const { student } = await setup();
+        const cookie = await cookieFor(student);
+        const accessToken = cookie.match(/accessToken=([^;]+)/)[1];
+
+        await expect(connect(null, { token: accessToken })).rejects.toThrow('Unauthorized');
+        await expect(connect(null, { token: 'garbage' })).rejects.toThrow('Unauthorized');
+        await expect(connect(null, { token: { a: 1 } })).rejects.toThrow('Unauthorized');
+    });
+
+    test('stops working once the user logs out', async () => {
+        const { student } = await setup();
+        const cookie = await cookieFor(student);
+        const token = await chatTokenFor(cookie);
+
+        await request(app).get('/api/v1/users/logout').set('Cookie', cookie);
+
+        await expect(connect(null, { token })).rejects.toThrow('Unauthorized');
+    });
 });
