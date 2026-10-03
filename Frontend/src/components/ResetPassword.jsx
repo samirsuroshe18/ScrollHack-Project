@@ -55,8 +55,8 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+    <div className="min-h-dvh bg-gray-900 flex items-center justify-center px-4 py-8">
+      <div className="bg-gray-800 p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 className="text-3xl font-bold text-white text-center mb-6">Reset password</h1>
 
         {status === 'checking' && <p className="text-gray-300 text-center">Checking your link…</p>}
