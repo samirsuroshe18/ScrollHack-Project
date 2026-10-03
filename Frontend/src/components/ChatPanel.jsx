@@ -158,13 +158,13 @@ const ChatPanel = () => {
   return (
     <div className="flex flex-col md:flex-row gap-6">
       {/* Conversations */}
-      <ul className="md:w-56 shrink-0 space-y-2" aria-label="Conversations">
+      <ul className="flex gap-2 overflow-x-auto pb-1 md:block md:w-56 md:shrink-0 md:space-y-2 md:overflow-visible md:pb-0" aria-label="Conversations">
         {mentorships.map((mentorship) => (
-          <li key={mentorship._id}>
+          <li key={mentorship._id} className="shrink-0 md:shrink">
             <button
               type="button"
               aria-current={mentorship._id === activeId ? 'true' : undefined}
-              className={`w-full text-left px-4 py-3 rounded-lg hover:bg-purple-700 transition-all ${mentorship._id === activeId ? 'bg-yellow-600' : 'bg-gray-700'}`}
+              className={`w-full text-left px-4 py-3 rounded-lg whitespace-nowrap md:whitespace-normal hover:bg-purple-700 transition-all ${mentorship._id === activeId ? 'bg-yellow-600' : 'bg-gray-700'}`}
               onClick={() => setActiveId(mentorship._id)}
             >
               {partnerOf(mentorship).userName}
@@ -179,13 +179,13 @@ const ChatPanel = () => {
           {active ? `Chat with ${partnerOf(active).userName}` : '1:1 Mentorship Chat'}
         </h2>
 
-        <div className="mb-4 border border-gray-600 rounded-lg p-4 h-80 overflow-y-auto" aria-live="polite">
+        <div className="mb-4 border border-gray-600 rounded-lg p-3 sm:p-4 h-[50dvh] md:h-80 overflow-y-auto" aria-live="polite">
           {messages.length === 0 && <p className="text-gray-400">No messages yet. Say hello!</p>}
           {messages.map((message) => {
             const mine = message.sender === user._id;
             return (
               <div key={message._id} className={`mb-3 flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[75%] px-3 py-2 rounded-lg ${mine ? 'bg-purple-600' : 'bg-gray-700'}`}>
+                <div className={`max-w-[85%] sm:max-w-[75%] px-3 py-2 rounded-lg ${mine ? 'bg-purple-600' : 'bg-gray-700'}`}>
                   <p className="whitespace-pre-line break-words">{message.text}</p>
                   <time className="block text-xs text-gray-300 mt-1" dateTime={message.createdAt}>
                     {formatTime(message.createdAt)}
@@ -200,7 +200,7 @@ const ChatPanel = () => {
         {error && <p className="text-red-400 mb-2" role="alert">{error}</p>}
         {!connected && <p className="text-gray-400 mb-2">Connecting…</p>}
 
-        <form onSubmit={handleSend} className="flex gap-3">
+        <form onSubmit={handleSend} className="flex gap-2 sm:gap-3">
           <input
             type="text"
             value={text}
