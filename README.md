@@ -24,6 +24,32 @@ Log in with a demo account to look around without signing up:
 - You can also sign up with your own email address; a verification link is
   sent to it.
 
+## Screenshots
+
+**Landing page**
+
+![Landing page](docs/screenshots/landing.png)
+
+**Mentor search:** a student describes the mentor they need and gets ranked matches.
+
+![Mentor search with ranked results](docs/screenshots/find-mentor.png)
+
+**Job portal:** alumni post openings; students read them.
+
+![Job portal on the alumni dashboard](docs/screenshots/alumni-job-portal.png)
+
+**Live chat** between a mentor and a student.
+
+![Mentorship chat](docs/screenshots/chat.png)
+
+**On a phone:** the sidebar becomes a menu, and chat fits the screen.
+
+<p>
+  <img src="docs/screenshots/mobile-menu.png" alt="Dashboard menu on a phone" width="260">
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/mobile-chat.png" alt="Mentorship chat on a phone" width="260">
+</p>
+
 ## Features
 
 - **Accounts:** sign-up as a student or an alumnus, email verification, login,
