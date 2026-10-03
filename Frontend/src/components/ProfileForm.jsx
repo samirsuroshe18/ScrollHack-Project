@@ -18,7 +18,7 @@ const toForm = (user) => ({
 
 // Edits the logged-in user's own profile
 const ProfileForm = () => {
-  const { user, refreshUser } = useAuth();
+  const { user, updateUser } = useAuth();
   const isAlumni = user.role === 'alumni';
   const [form, setForm] = useState(() => toForm(user));
   const [notice, setNotice] = useState('');
@@ -54,8 +54,10 @@ const ProfileForm = () => {
     }
 
     try {
-      await api.patch('/users/me', { userName: form.userName, phoneNo: form.phoneNo, profile });
-      await refreshUser();
+      const { data } = await api.patch('/users/me', { userName: form.userName, phoneNo: form.phoneNo, profile });
+      // the response already holds the saved profile, so no second request is needed
+      updateUser(data.data.user);
+      setForm(toForm(data.data.user));
       setNotice('Saved');
     } catch (err) {
       setError(errorMessage(err));
@@ -85,15 +87,15 @@ const ProfileForm = () => {
       <p className="text-gray-400 mb-6">{user.email}</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        {field('userName', 'Name', { required: true })}
-        {field('phoneNo', 'Mobile No', { type: 'tel' })}
-        {isAlumni && field('profession', 'Profession')}
-        {field('field', isAlumni ? 'Field of expertise' : 'Field of study')}
+        {field('userName', 'Name', { required: true, maxLength: 80 })}
+        {field('phoneNo', 'Mobile No', { type: 'tel', maxLength: 20 })}
+        {isAlumni && field('profession', 'Profession', { maxLength: 120 })}
+        {field('field', isAlumni ? 'Field of expertise' : 'Field of study', { maxLength: 120 })}
         {isAlumni && field('passingYear', 'Passing year', { type: 'number', min: 1950, max: 2100 })}
-        {isAlumni && field('workplace', 'Workplace')}
+        {isAlumni && field('workplace', 'Workplace', { maxLength: 120 })}
         {field('skills', isAlumni ? 'Skills (comma separated)' : 'Interests (comma separated)')}
-        {field('location', 'Location')}
-        {isAlumni && field('availability', 'Availability for mentoring', { placeholder: 'For example: weekends, 10 am to 1 pm' })}
+        {field('location', 'Location', { maxLength: 120 })}
+        {isAlumni && field('availability', 'Availability for mentoring', { maxLength: 120, placeholder: 'For example: weekends, 10 am to 1 pm' })}
       </div>
 
       <div className="mb-4">

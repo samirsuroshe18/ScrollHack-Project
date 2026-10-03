@@ -3,11 +3,26 @@ import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import { User, ROLES } from '../models/user.model.js';
 import mailSender from '../utils/mailSender.js';
+import { endSessions } from '../utils/sessions.js';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 6;
 const DUPLICATE_KEY = 11000;
-const PROFILE_TEXT_FIELDS = ['profession', 'field', 'workplace', 'location', 'availability', 'bio'];
+
+// label shown in error messages, and the longest value accepted
+const PROFILE_TEXT_FIELDS = {
+    profession: ['Profession', 120],
+    field: ['Field', 120],
+    workplace: ['Workplace', 120],
+    location: ['Location', 120],
+    availability: ['Availability', 120],
+    bio: ['About you', 1000],
+};
+const NAME_MAX = 80;
+const PHONE_MAX = 20;
+const PLACE_MAX = 80;
+const SKILLS_MAX = 20;
+const SKILL_MAX_LENGTH = 40;
 
 // the cookie must only require https in production, otherwise it is dropped on http://localhost
 const cookieOptions = () => ({
@@ -18,12 +33,41 @@ const cookieOptions = () => ({
 
 const normalizeEmail = (email) => (typeof email === 'string' ? email.trim().toLowerCase() : '');
 
-const text = (value) => (typeof value === 'string' ? value.trim() : '');
+// Reads a text field from a request body. A number is accepted as text (a phone number
+// often arrives as one); anything else is refused, so a bad value never erases a stored one.
+const readText = (value, label, maxLength) => {
+    if (value === undefined || value === null) return '';
 
-// accepts ["React", "Node"] or "React, Node"
+    if (typeof value !== 'string' && typeof value !== 'number') {
+        throw new ApiError(400, `${label} must be text`);
+    }
+
+    const result = String(value).trim();
+
+    if (result.length > maxLength) {
+        throw new ApiError(400, `${label} must be at most ${maxLength} characters`);
+    }
+
+    return result;
+};
+
+// accepts ["React", "Node"] or "React, Node"; entries that are not text are dropped
 const parseSkills = (skills) => {
-    const list = Array.isArray(skills) ? skills : String(skills).split(',');
-    return list.map((skill) => String(skill).trim()).filter(Boolean);
+    const list = Array.isArray(skills) ? skills : (typeof skills === 'string' ? skills.split(',') : []);
+    const cleaned = list
+        .filter((skill) => typeof skill === 'string')
+        .map((skill) => skill.trim())
+        .filter(Boolean);
+
+    if (cleaned.length > SKILLS_MAX) {
+        throw new ApiError(400, "You can list at most 20 skills");
+    }
+
+    if (cleaned.some((skill) => skill.length > SKILL_MAX_LENGTH)) {
+        throw new ApiError(400, "Each skill must be at most 40 characters");
+    }
+
+    return cleaned;
 };
 
 // returns only the profile fields that were sent, already validated
@@ -31,8 +75,8 @@ const readProfile = (profile) => {
     const changes = {};
     if (!profile || typeof profile !== 'object') return changes;
 
-    for (const field of PROFILE_TEXT_FIELDS) {
-        if (profile[field] !== undefined) changes[field] = text(profile[field]);
+    for (const [field, [label, maxLength]] of Object.entries(PROFILE_TEXT_FIELDS)) {
+        if (profile[field] !== undefined) changes[field] = readText(profile[field], label, maxLength);
     }
 
     if (profile.skills !== undefined) {
@@ -71,8 +115,8 @@ const generateAccessAndRefreshToken = async (userId) => {
 }
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { password, role, phoneNo, state, district, profile } = req.body;
-    const userName = text(req.body.userName);
+    const { password, role } = req.body;
+    const userName = readText(req.body.userName, 'Name', NAME_MAX);
     const email = normalizeEmail(req.body.email);
 
     if (!userName || !email || !password || !role) {
@@ -91,6 +135,14 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Password must be at least 6 characters");
     }
 
+    // every field is checked before anything is saved
+    const details = {
+        phoneNo: readText(req.body.phoneNo, 'Mobile number', PHONE_MAX),
+        state: readText(req.body.state, 'State', PLACE_MAX),
+        district: readText(req.body.district, 'District', PLACE_MAX),
+        profile: readProfile(req.body.profile),
+    };
+
     const existedUser = await User.findOne({ email });
 
     if (existedUser) {
@@ -99,16 +151,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
     let user;
     try {
-        user = await User.create({
-            userName,
-            email,
-            password,
-            role,
-            phoneNo: text(phoneNo),
-            state: text(state),
-            district: text(district),
-            profile: readProfile(profile),
-        });
+        user = await User.create({ userName, email, password, role, ...details });
     } catch (error) {
         // two sign-ups can pass the check above at the same moment; the unique index decides
         if (error.code === DUPLICATE_KEY) {
@@ -120,7 +163,8 @@ const registerUser = asyncHandler(async (req, res) => {
     const mailResponse = await mailSender(email, user._id, "VERIFY");
 
     if (!mailResponse) {
-        throw new ApiError(500, "Account created, but the verification email could not be sent");
+        // logging in with an unverified account sends a fresh link
+        throw new ApiError(500, "Account created, but the verification email could not be sent. Log in to get a new link.");
     }
 
     return res.status(201).json(
@@ -146,7 +190,12 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     if (!user.isVerified) {
-        await mailSender(email, user._id, "VERIFY");
+        const mailResponse = await mailSender(email, user._id, "VERIFY");
+
+        if (!mailResponse) {
+            throw new ApiError(500, "Email not verified, and a new verification link could not be sent. Please try again later.");
+        }
+
         throw new ApiError(403, "Email not verified. A new verification link has been sent.");
     }
 
@@ -162,17 +211,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
 
-    await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $unset: {
-                refreshToken: 1
-            }
-        },
-        {
-            new: true
-        }
-    );
+    await endSessions(req.user._id);
 
     return res.status(200)
         .clearCookie("accessToken", cookieOptions())
@@ -191,15 +230,16 @@ const updateMe = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (req.body.userName !== undefined) {
-        const userName = text(req.body.userName);
+        const userName = readText(req.body.userName, 'Name', NAME_MAX);
         if (!userName) {
             throw new ApiError(400, "Name cannot be empty");
         }
         user.userName = userName;
     }
 
-    for (const field of ['phoneNo', 'state', 'district']) {
-        if (req.body[field] !== undefined) user[field] = text(req.body[field]);
+    const details = { phoneNo: ['Mobile number', PHONE_MAX], state: ['State', PLACE_MAX], district: ['District', PLACE_MAX] };
+    for (const [field, [label, maxLength]] of Object.entries(details)) {
+        if (req.body[field] !== undefined) user[field] = readText(req.body[field], label, maxLength);
     }
 
     const profileChanges = readProfile(req.body.profile);
