@@ -2,6 +2,21 @@ import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from 'bcrypt';
 
+export const ROLES = ['student', 'alumni'];
+
+const profileSchema = new Schema({
+    profession: { type: String, trim: true },
+    // field of study for students, field of expertise for alumni
+    field: { type: String, trim: true },
+    passingYear: { type: Number, min: 1950, max: 2100 },
+    workplace: { type: String, trim: true },
+    // skills for alumni, interests for students
+    skills: { type: [String], default: [] },
+    location: { type: String, trim: true },
+    availability: { type: String, trim: true },
+    bio: { type: String, trim: true, maxlength: 1000 },
+}, { _id: false });
+
 const userSchema = new Schema({
     userName: {
         type: String,
@@ -22,42 +37,49 @@ const userSchema = new Schema({
         trim: true,
     },
 
-    profile: {
-        type: String,
-    },
-
     password: {
         type: String,
-    },
-
-    isVerfied: {
-        type: Boolean,
-        default: false,
-    },
-
-    isGoogleVerfied: {
-        type: Boolean,
-        default: false,
-    },
-
-    FCMToken: {
-        type: String
+        required: true,
     },
 
     role: {
         type: String,
-        enum: ['user', 'admin', 'superadmin'],
-        default: 'user'
+        enum: ROLES,
+        required: true,
+    },
+
+    state: {
+        type: String,
+        trim: true,
+    },
+
+    district: {
+        type: String,
+        trim: true,
+    },
+
+    profile: {
+        type: profileSchema,
+        default: () => ({}),
+    },
+
+    isVerified: {
+        type: Boolean,
+        default: false,
     },
 
     refreshToken: {
         type: String
     },
 
+    // raised on logout and password reset; a token carrying an older value is refused
+    tokenVersion: {
+        type: Number,
+        default: 0,
+    },
+
     verifyToken: String,
     verifyTokenExpiry: Date,
-    googleVerifyToken: String,
-    googleVerifyTokenExpiry: Date,
     forgotPasswordToken: String,
     forgotPasswordTokenExpiry: Date,
 
@@ -84,6 +106,8 @@ userSchema.methods.generateAccessToken = function () {
             _id: this._id,
             email: this.email,
             userName: this.userName,
+            role: this.role,
+            tokenVersion: this.tokenVersion,
         }, process.env.ACCESS_TOKEN_SECRET,
         {
             expiresIn: process.env.ACCESS_TOKEN_EXPIRY
@@ -102,5 +126,20 @@ userSchema.methods.generateRefreshToken = function () {
         }
     );
 }
+
+// never send secrets or one-time tokens to a client
+userSchema.set('toJSON', {
+    transform: (_, ret) => {
+        delete ret.password;
+        delete ret.refreshToken;
+        delete ret.tokenVersion;
+        delete ret.verifyToken;
+        delete ret.verifyTokenExpiry;
+        delete ret.forgotPasswordToken;
+        delete ret.forgotPasswordTokenExpiry;
+        delete ret.__v;
+        return ret;
+    }
+});
 
 export const User = mongoose.model("User", userSchema);

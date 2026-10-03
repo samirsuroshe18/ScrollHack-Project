@@ -1,34 +1,61 @@
 // src/pages/LoginPage.js
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { errorMessage } from '../api/client';
+import { dashboardPathFor, useAuth } from '../context/auth';
+import { errorTextClass, inputClass, labelClass, primaryButtonClass } from './formStyles';
+
+// Function to generate a random CAPTCHA code
+function generateCaptcha() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let captcha = '';
+  for (let i = 0; i < 6; i++) {
+    captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return captcha;
+}
 
 const Login = () => {
+  const { user, loading, login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [captchaInput, setCaptchaInput] = useState('');
-  const [captchaCode, setCaptchaCode] = useState(generateCaptcha());
+  const [captchaCode, setCaptchaCode] = useState(generateCaptcha);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Function to generate a random CAPTCHA code
-  function generateCaptcha() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let captcha = '';
-    for (let i = 0; i < 6; i++) {
-      captcha += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return captcha;
-  }
+  const resetCaptcha = () => {
+    setCaptchaCode(generateCaptcha());
+    setCaptchaInput('');
+  };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (captchaInput === captchaCode) {
-      // Handle successful login logic here (e.g., redirect to dashboard)
-      navigate('/dashboard'); // Navigate to the dashboard
-    } else {
-      alert('Captcha is incorrect. Please try again.');
-      setCaptchaCode(generateCaptcha()); // Regenerate CAPTCHA if incorrect
+    setError('');
+
+    if (captchaInput !== captchaCode) {
+      setError('Captcha is incorrect. Please try again.');
+      resetCaptcha();
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const loggedInUser = await login(email, password);
+      navigate(dashboardPathFor(loggedInUser), { replace: true });
+    } catch (err) {
+      setError(errorMessage(err));
+      resetCaptcha();
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  // someone who is already logged in has no use for this page
+  if (!loading && user && !submitting) {
+    return <Navigate to={dashboardPathFor(user)} replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -37,49 +64,60 @@ const Login = () => {
 
         <form onSubmit={handleSubmit}>
           {/* Email */}
-          <label className="block text-gray-400 mb-2">Email</label>
+          <label className={labelClass} htmlFor="email">Email</label>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 rounded-lg bg-gray-700 text-white mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`${inputClass} mb-4`}
             placeholder="Enter your email"
             required
           />
 
           {/* Password */}
-          <label className="block text-gray-400 mb-2">Password</label>
+          <label className={labelClass} htmlFor="password">Password</label>
           <input
+            id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 rounded-lg bg-gray-700 text-white mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`${inputClass} mb-2`}
             placeholder="Enter your password"
             required
           />
+          <div className="mb-4 text-right">
+            <Link to="/forgot-password" className="text-sm text-blue-500 hover:underline">
+              Forgot password?
+            </Link>
+          </div>
 
           {/* CAPTCHA */}
           <div className="mb-4 text-gray-400 ">
-            Captcha: <strong>{captchaCode}</strong>
+            Captcha: <strong className="select-none tracking-widest">{captchaCode}</strong>
           </div>
           <input
             type="text"
             value={captchaInput}
             onChange={(e) => setCaptchaInput(e.target.value)}
-            className="w-full p-3 rounded-lg bg-gray-700 text-white mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`${inputClass} mb-4`}
             placeholder="Enter the captcha"
+            aria-label="Captcha"
+            autoComplete="off"
             required
           />
 
+          {error && <p className={errorTextClass} role="alert">{error}</p>}
+
           {/* Login Button */}
-          <button type="submit" className="w-full bg-blue-600 p-3 rounded-lg text-white hover:bg-blue-500">
-            Login
+          <button type="submit" className={primaryButtonClass} disabled={submitting}>
+            {submitting ? 'Logging in…' : 'Login'}
           </button>
         </form>
 
         {/* Create Account Option */}
         <div className="mt-4 text-gray-400 text-center">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link to="/register" className="text-blue-500 hover:underline">
             Create an account
           </Link>

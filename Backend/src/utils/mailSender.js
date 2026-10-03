@@ -1,39 +1,53 @@
 // utils/mailSender.js
 import { createTransport } from 'nodemailer';
-import bcryptjs from 'bcryptjs'
+import crypto from 'crypto';
 import { User } from '../models/user.model.js';
 
+const TOKEN_LIFETIME_MS = 1000 * 60 * 10;
+
+const createMailTransport = () => {
+  // tests must never send real email
+  if (process.env.NODE_ENV === 'test') {
+    return createTransport({ jsonTransport: true });
+  }
+
+  return createTransport({
+    host: process.env.MAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASS,
+    }
+  });
+};
+
+// emailType is "VERIFY" or "RESET"
 async function mailSender(email, userId, emailType) {
   try {
-    // Create hashed token 
-    const hashedToken = await bcryptjs.hash(userId.toString(), 10)
+    // hex keeps the token safe to put in a URL
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiry = Date.now() + TOKEN_LIFETIME_MS;
 
     if (emailType === "VERIFY") {
-      await User.findByIdAndUpdate(userId, { verifyToken: hashedToken, verifyTokenExpiry: Date.now() + (1000 * 60 * 10) });
+      await User.findByIdAndUpdate(userId, { verifyToken: token, verifyTokenExpiry: expiry });
     } else if (emailType === "RESET") {
-      await User.findByIdAndUpdate(userId, { forgotPasswordToken: hashedToken, forgotPasswordTokenExpiry: Date.now() + (1000 * 60 * 10) });
-    } else if (emailType === "GOOGLE") {
-      await User.findByIdAndUpdate(userId, { googleVerifyToken: hashedToken, googleVerifyTokenExpiry: Date.now() + (1000 * 60 * 10) });
+      await User.findByIdAndUpdate(userId, { forgotPasswordToken: token, forgotPasswordTokenExpiry: expiry });
     }
 
+    const isVerify = emailType === "VERIFY";
+    const link = `${process.env.FRONTEND_URL}/${isVerify ? "verify-email" : "reset-password"}?token=${token}`;
+    const action = isVerify ? "verify your email" : "reset your password";
 
-    // Create a Transporter to send emails
-    let transporter = createTransport({
-      host: process.env.MAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      }
-    });
+    const transporter = createMailTransport();
 
-
-    // Send emails to users
-    let mailResponse = await transporter.sendMail({
-      from: process.env.MAIL_USER,
+    const mailResponse = await transporter.sendMail({
+      from: `AlumniNest <${process.env.MAIL_USER}>`,
       to: email,
-      subject: emailType === "VERIFY" ? "Verify your email" : emailType === "GOOGLE" ? "Link your Google account" : "Reset your password",
-      html: `<p>Click <a href="${process.env.DOMAIN}/api/v1/verify/${emailType === "VERIFY" ? "verify-email" : emailType === "GOOGLE" ? "link-google" : "reset-password"}?token=${hashedToken}">here</a> to ${emailType === "VERIFY" ? "verify your email" : emailType === "GOOGLE" ? "Link your Google account" : "Reset your password"}</p>`
+      subject: isVerify ? "Verify your email" : "Reset your password",
+      html: `<p>Hello,</p>
+<p>Click <a href="${link}">here</a> to ${action}. The link is valid for 10 minutes.</p>
+<p>If you did not ask for this, you can ignore this email.</p>
+<p>AlumniNest</p>`
     });
 
     return mailResponse;

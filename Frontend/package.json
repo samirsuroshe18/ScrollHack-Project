@@ -1,14 +1,11 @@
 {
-  "name": "vite-project",
+  "name": "alumninest-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -16,9 +13,9 @@
     "axios": "^1.7.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-hook-form": "^7.53.0",
     "react-icons": "^5.3.0",
     "react-router-dom": "^6.26.2",
+    "socket.io-client": "^4.8.4",
     "typed.js": "^2.1.0"
   },
   "devDependencies": {
