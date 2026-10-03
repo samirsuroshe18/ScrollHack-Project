@@ -4,6 +4,11 @@ import crypto from 'crypto';
 import { User } from '../models/user.model.js';
 
 const TOKEN_LIFETIME_MS = 1000 * 60 * 10;
+const BREVO_URL = 'https://api.brevo.com/v3/smtp/email';
+// a mail server that cannot be reached must fail fast instead of holding the request open
+const SEND_TIMEOUT_MS = 10000;
+
+const senderAddress = () => process.env.MAIL_FROM || process.env.MAIL_USER;
 
 const createMailTransport = () => {
   // tests must never send real email
@@ -17,9 +22,43 @@ const createMailTransport = () => {
     auth: {
       user: process.env.MAIL_USER,
       pass: process.env.MAIL_PASS,
-    }
+    },
+    connectionTimeout: SEND_TIMEOUT_MS,
+    greetingTimeout: SEND_TIMEOUT_MS,
+    socketTimeout: SEND_TIMEOUT_MS,
   });
 };
+
+// Sends through Brevo's HTTPS API. Some hosts block the SMTP ports, and HTTPS always gets out.
+const sendWithBrevo = async ({ to, subject, html }) => {
+  const response = await fetch(BREVO_URL, {
+    method: 'POST',
+    headers: {
+      'api-key': process.env.BREVO_API_KEY,
+      'content-type': 'application/json',
+      accept: 'application/json',
+    },
+    body: JSON.stringify({
+      sender: { name: 'AlumniNest', email: senderAddress() },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+    signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Mail service answered ${response.status}: ${await response.text()}`);
+  }
+
+  return response.json();
+};
+
+const sendWithSmtp = ({ to, subject, html }) =>
+  createMailTransport().sendMail({ from: `AlumniNest <${senderAddress()}>`, to, subject, html });
+
+// the HTTPS API is used whenever a key is configured; otherwise plain SMTP
+const deliver = (message) => (process.env.BREVO_API_KEY ? sendWithBrevo(message) : sendWithSmtp(message));
 
 // emailType is "VERIFY" or "RESET"
 async function mailSender(email, userId, emailType) {
@@ -38,10 +77,7 @@ async function mailSender(email, userId, emailType) {
     const link = `${process.env.FRONTEND_URL}/${isVerify ? "verify-email" : "reset-password"}?token=${token}`;
     const action = isVerify ? "verify your email" : "reset your password";
 
-    const transporter = createMailTransport();
-
-    const mailResponse = await transporter.sendMail({
-      from: `AlumniNest <${process.env.MAIL_USER}>`,
+    const mailResponse = await deliver({
       to: email,
       subject: isVerify ? "Verify your email" : "Reset your password",
       html: `<p>Hello,</p>

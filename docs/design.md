@@ -229,6 +229,7 @@ to the API directly, at `VITE_SOCKET_URL`, and authenticates with a chat token.
 | `CORS_ORIGIN` | allowed frontend origin |
 | `FRONTEND_URL` | base URL used in email links |
 | `MAIL_HOST`, `EMAIL_PORT`, `MAIL_USER`, `MAIL_PASS` | SMTP settings |
+| `BREVO_API_KEY`, `MAIL_FROM` | optional: send email through the Brevo HTTPS API, for hosts that block mail ports |
 | `ACCESS_TOKEN_SECRET`, `ACCESS_TOKEN_EXPIRY` | access token signing |
 | `REFRESH_TOKEN_SECRET`, `REFRESH_TOKEN_EXPIRY` | refresh token signing |
 
