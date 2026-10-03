@@ -24,8 +24,8 @@ const VerifyEmail = () => {
   }, [token]);
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md text-center">
+    <div className="min-h-dvh bg-gray-900 flex items-center justify-center px-4 py-8">
+      <div className="bg-gray-800 p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-md text-center">
         <h1 className="text-3xl font-bold text-white mb-6">Email verification</h1>
 
         {status === 'verifying' && <p className="text-gray-300">Verifying…</p>}
