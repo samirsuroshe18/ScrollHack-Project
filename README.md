@@ -7,6 +7,23 @@ chat with the mentor once the request is accepted.
 
 The project started at the ScrollHack hackathon in September 2024.
 
+## Live demo
+
+**<https://scrollhack.vercel.app>**
+
+Log in with a demo account to look around without signing up:
+
+| Role | Email | Password |
+|---|---|---|
+| Alumnus | `asha.alumni@alumninest.demo` | `Demo@123` |
+| Student | `arjun.student@alumninest.demo` | `Demo@123` |
+
+- The people, companies, posts and conversations in the demo are sample data.
+- The API runs on a free plan that sleeps when idle, so the first request can
+  take up to a minute.
+- You can also sign up with your own email address; a verification link is
+  sent to it.
+
 ## Features
 
 - **Accounts:** sign-up as a student or an alumnus, email verification, login,
@@ -114,8 +131,8 @@ cd Backend
 npm run seed
 ```
 
-This creates five alumni and three students with profiles, six posts, and a
-mentorship with a short conversation. Every demo account uses the password
+This fills the database with sample alumni and students, their profiles, posts,
+mentorships and a short conversation. Every demo account uses the password
 `Demo@123`, for example:
 
 | Role | Email |
