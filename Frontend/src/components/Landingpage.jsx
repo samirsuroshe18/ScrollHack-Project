@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Typed from 'typed.js';
-import { FaFacebook, FaTwitter, FaLinkedin } from 'react-icons/fa';
+import { FaGithub } from 'react-icons/fa';
 import Logo from '../assets/logo.png';
 
 const LandingPage = () => {
@@ -52,39 +52,22 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Social Links */}
+      {/* Source */}
       <section className="flex justify-center py-6 bg-gray-800">
-        <div className="flex space-x-6">
-          <a
-            href="https://facebook.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-3xl hover:text-blue-500 transition duration-300"
-          >
-            <FaFacebook />
-          </a>
-          <a
-            href="https://twitter.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-3xl hover:text-blue-500 transition duration-300"
-          >
-            <FaTwitter />
-          </a>
-          <a
-            href="https://linkedin.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-3xl hover:text-blue-500 transition duration-300"
-          >
-            <FaLinkedin />
-          </a>
-        </div>
+        <a
+          href="https://github.com/samirsuroshe18/alumninest"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="AlumniNest on GitHub"
+          className="text-3xl hover:text-blue-500 transition duration-300"
+        >
+          <FaGithub />
+        </a>
       </section>
 
       {/* Footer */}
       <footer className="py-4 bg-gray-900 text-center">
-        <p className="text-sm">&copy; 2024 AlumniNest. All Rights Reserved.</p>
+        <p className="text-sm">&copy; {new Date().getFullYear()} AlumniNest</p>
       </footer>
     </div>
   );
