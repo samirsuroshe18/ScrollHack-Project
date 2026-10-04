@@ -9,7 +9,7 @@ The project started at the ScrollHack hackathon in September 2024.
 
 ## Live demo
 
-**<https://scrollhack.vercel.app>**
+**<https://alumninest-s.vercel.app>**
 
 Log in with a demo account to look around without signing up:
 
