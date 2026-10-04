@@ -221,5 +221,9 @@ See [docs/design.md](docs/design.md) for details.
 ## Team
 
 Built by Samir Suroshe ([@samirsuroshe18](https://github.com/samirsuroshe18)),
-Mohit ([@Mohitd45](https://github.com/Mohitd45)) and 
-Tanishq ([@TanishqMSD](https://github.com/TanishqMSD)).
+Mohit Dhangar ([@mohit45v](https://github.com/mohit45v)) and
+Tanishq Kulkarni ([@tanishqbuilds](https://github.com/tanishqbuilds)).
+
+## License
+
+[MIT](LICENSE)
