@@ -85,8 +85,8 @@ Log in with a demo account to look around without signing up:
 ### Setup
 
 ```bash
-git clone https://github.com/samirsuroshe18/ScrollHack-Project.git
-cd ScrollHack-Project
+git clone https://github.com/samirsuroshe18/alumninest.git
+cd alumninest
 
 cd Backend
 npm install
